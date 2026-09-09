@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "node": true,
+    "browser": true,
+    "es2022": true
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/build/**",
+    "**/.expo/**",
+    "**/coverage/**",
+    "**/node_modules/**",
+    "apps/mobile/android/**",
+    "apps/mobile/ios/**"
+  ]
+}

@@ -1,0 +1,40 @@
+# Dépendances
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Expo / React Native
+apps/mobile/.expo/
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Kairn Desk — données locales, jamais versionnées
+apps/desk/.data/
+**/sessions/*.gpx
+!packages/core/test/fixtures/**
+
+# Éditeurs / OS
+.DS_Store
+*.log
+npm-debug.log*
+
+# Bundle de handoff du design (matériel de référence, pas du code produit)
+_handoff_extracted/
+*.dc.html
+Application sport open source*.zip
+
+# Env locaux
+.env
+.env.local
