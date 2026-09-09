@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairn Desk</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <svg width="22" height="24" viewBox="0 0 68 80" fill="none">
+        <polygon points="2,79 4,66 26,62 52,63 66,69 65,79" fill="var(--color-neutral-500)"/>
+        <polygon points="10,58 12,45 34,40 58,46 60,54 56,58" fill="var(--color-accent)"/>
+        <polygon points="8,38 6,27 22,21 42,23 48,31 44,38" fill="var(--color-neutral-500)"/>
+        <polygon points="22,18 20,8 32,2 46,5 52,12 48,18" fill="var(--color-accent)"/>
+      </svg>
+      <div>
+        <div class="brand-name">Kairn Desk</div>
+        <div class="brand-sub" id="app-version">— · hors ligne</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item active" data-nav="sessions">Sessions</div>
+      <div class="nav-item" data-soon>Semaines</div>
+      <div class="nav-item" data-soon>Statistiques</div>
+      <div class="nav-item" data-soon>Cartes</div>
+      <div class="nav-item" data-soon>Import / export</div>
+    </nav>
+
+    <div class="card folder-card">
+      <div class="kicker">Dossier surveillé</div>
+      <div class="folder-path" id="folder-path">—</div>
+      <div class="folder-meta" id="folder-meta">—</div>
+      <button class="btn btn-secondary" id="btn-change-folder" style="width:100%;margin-top:9px">Changer de dossier</button>
+    </div>
+
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:7px">
+      <span class="privacy-pill">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        Aucun compte · aucun envoi
+      </span>
+      <div class="sidebar-footnote">Servi sur localhost. Fermez le terminal, le service s'arrête.</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <input class="input" type="text" id="search" placeholder="Rechercher une session, un lieu">
+      <div class="seg" id="period-filter">
+        <button data-weeks="8" aria-pressed="true">8 sem.</button>
+        <button data-weeks="26">26 sem.</button>
+        <button data-weeks="104">Tout</button>
+      </div>
+      <div class="seg" id="sport-filter">
+        <button data-sport="" aria-pressed="true">Tous</button>
+        <button data-sport="course">Course</button>
+        <button data-sport="velo">Vélo</button>
+        <button data-sport="randonnee">Rando</button>
+        <button data-sport="trail">Trail</button>
+        <button data-sport="marche">Marche</button>
+      </div>
+      <button class="btn btn-secondary" id="btn-compare" style="margin-left:auto">Comparer</button>
+      <button class="btn btn-secondary" id="btn-backup">Archive de sauvegarde</button>
+    </div>
+
+    <div class="body">
+      <div class="list-pane" id="list-pane">
+        <div class="detail-empty">Chargement…</div>
+      </div>
+      <div class="detail-pane" id="detail-pane">
+        <div class="detail-empty">Choisissez une session dans la liste pour voir son détail.</div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script src="api.js"></script>
+<script src="charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
