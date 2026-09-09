@@ -1,0 +1,76 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Tout : installer les dépendances",
+      "type": "shell",
+      "command": "npm install",
+      "problemMatcher": []
+    },
+    {
+      "label": "Tout : lancer les tests",
+      "type": "shell",
+      "command": "npm test",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Core : lancer les tests",
+      "type": "shell",
+      "command": "npm run test:core",
+      "problemMatcher": []
+    },
+    {
+      "label": "Core : compiler",
+      "type": "shell",
+      "command": "npm run build:core",
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Kairn Desk : démarrer (poste de travail)",
+      "type": "shell",
+      "command": "npm run dev --workspace apps/desk",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": { "regexp": "." , "file": 1, "location": 2, "message": 3 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "Kairn Desk sert http"
+        }
+      },
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Kairn Desk : lancer les tests",
+      "type": "shell",
+      "command": "npm run test:desk",
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile : démarrer (Expo)",
+      "type": "shell",
+      "command": "npm run mobile:start",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile : lancer sur un appareil/émulateur Android",
+      "type": "shell",
+      "command": "npm run android --workspace apps/mobile",
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile : lancer les tests",
+      "type": "shell",
+      "command": "npm run test:mobile",
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile : vérifier les types",
+      "type": "shell",
+      "command": "npm run typecheck --workspace apps/mobile",
+      "problemMatcher": ["$tsc"]
+    }
+  ]
+}
