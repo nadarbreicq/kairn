@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Kairn",
+    "slug": "kairn",
+    "version": "0.9.4",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#161826",
+    "platforms": ["android", "web"],
+    "android": {
+      "package": "app.kairn.mobile",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Kairn utilise la position pour enregistrer le tracé de la séance en cours, y compris quand l'écran est verrouillé."
+        }
+      ]
+    ],
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
