@@ -22,6 +22,7 @@ jobs:
 
   android-build:
     name: Mobile — APK debug (Gradle, la même commande qu'en local)
+    needs: lint-and-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,9 +34,17 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      # Garantit un SDK Android complet avec les licences déjà acceptées,
+      # plutôt que de dépendre de ce que l'image ubuntu-latest embarque par
+      # défaut (ça change avec le temps, et l'acceptation des licences est
+      # la cause la plus fréquente d'échec au premier essai en CI).
+      - uses: android-actions/setup-android@v3
+      # Cache les dépendances Gradle entre les exécutions : la première
+      # compilation reste longue, les suivantes sont nettement plus rapides.
+      - uses: gradle/actions/setup-gradle@v4
       - run: npm ci
       - run: npm run build --workspace @kairn/core
-      # Génère les projets natifs android/ (non versionnés, voir .gitignore) —
+      # Génère le projet natif android/ (non versionné, voir .gitignore) —
       # la même étape que sur un poste de développement avant `./gradlew`.
       - run: npx expo prebuild --platform android --no-install
         working-directory: apps/mobile

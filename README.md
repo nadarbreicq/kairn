@@ -42,7 +42,7 @@ Rien de tout ça n'est envoyé sur Internet : le programme tourne uniquement sur
 
 Pour installer Kairn sur un téléphone sans repasser par l'ordinateur à chaque fois, il faut un fichier `.apk` — l'équivalent d'un fichier d'installation. Deux façons de l'obtenir :
 
-- **Depuis GitHub, sans rien installer** (une fois le dépôt mis en ligne) : onglet **Actions** du dépôt → dernière exécution de *CI* → artefact `kairn-debug-apk` à télécharger.
+- **Depuis GitHub, sans rien installer** : chaque envoi sur `main` déclenche automatiquement `.github/workflows/ci.yml`, qui compile l'APK debug. Une fois le dépôt en ligne : onglet **Actions** du dépôt → dernière exécution de *CI* → artefact `kairn-debug-apk` à télécharger (disponible seulement une fois l'exécution terminée, quelques minutes).
 - **En le fabriquant vous-même**, avec en plus [Android Studio](https://developer.android.com/studio) (pour les outils Android) et un JDK 17 (par exemple [Temurin](https://adoptium.net)) installés sur l'ordinateur :
 
   ```bash
