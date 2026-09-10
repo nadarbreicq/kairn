@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { totalDistanceMeters } from '@kairn/core';
 import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
@@ -14,6 +15,9 @@ export function LiveScreen() {
   const { state, toggleRunning, stopRecording } = useApp();
   const [view, setView] = useState<LiveView>('numbers');
   const { points, paused } = state.live;
+  // Pas de barre d'onglets pendant l'enregistrement (voir AppShell) : cet
+  // écran doit réserver lui-même l'espace sous la barre de geste/navigation.
+  const insets = useSafeAreaInsets();
 
   const metrics = useMemo(() => {
     const first = points[0];
@@ -30,7 +34,7 @@ export function LiveScreen() {
     : '—';
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, spacing[4]) }]}>
       <View style={styles.recRow}>
         <View style={[styles.recDot, { backgroundColor: paused ? colors.neutral600 : colors.accent }]} />
         <Text style={styles.recLabel}>{paused ? 'En pause' : 'Enregistrement'}</Text>

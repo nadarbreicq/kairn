@@ -1,5 +1,6 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
+import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 import { generateSyntheticSession } from '@kairn/core';
 import { AppProvider, type AppServices } from '../src/store/AppContext';
 import { InMemorySessionStore } from '../src/services/sessionStore';
@@ -20,13 +21,21 @@ function makeServices(overrides: Partial<AppServices> = {}): AppServices {
   };
 }
 
+// En test, aucune mesure native n'a lieu : on fournit des marges de sécurité
+// fixes (nulles) plutôt que de dépendre d'un onLayout qui ne se déclenche pas.
+const NO_INSETS: Metrics = { frame: { x: 0, y: 0, width: 0, height: 0 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
+
+function renderScreen(services: AppServices, ui: React.ReactElement) {
+  return render(
+    <SafeAreaProvider initialMetrics={NO_INSETS}>
+      <AppProvider services={services}>{ui}</AppProvider>
+    </SafeAreaProvider>
+  );
+}
+
 describe('OnboardingScreen', () => {
   it("affiche le premier écran puis avance jusqu'au choix du stockage", async () => {
-    const { getByText, findByText } = render(
-      <AppProvider services={makeServices()}>
-        <OnboardingScreen />
-      </AppProvider>
-    );
+    const { getByText, findByText } = renderScreen(makeServices(), <OnboardingScreen />);
 
     await findByText('Vos données restent sur ce téléphone');
     fireEvent.press(getByText('Suivant'));
@@ -46,11 +55,7 @@ describe('HomeScreen', () => {
       settingsStore: new InMemorySettingsStore({ onboardingDone: true }),
     });
 
-    const { findByText } = render(
-      <AppProvider services={services}>
-        <HomeScreen />
-      </AppProvider>
-    );
+    const { findByText } = renderScreen(services, <HomeScreen />);
 
     await findByText('Boucle du canal');
     await findByText('Sessions');
@@ -58,11 +63,7 @@ describe('HomeScreen', () => {
 
   it("affiche un message quand il n'y a aucune session", async () => {
     const services = makeServices({ settingsStore: new InMemorySettingsStore({ onboardingDone: true }) });
-    const { findByText } = render(
-      <AppProvider services={services}>
-        <HomeScreen />
-      </AppProvider>
-    );
+    const { findByText } = renderScreen(services, <HomeScreen />);
     await findByText(/Aucune session pour l'instant/);
   });
 });

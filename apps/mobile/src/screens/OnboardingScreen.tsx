@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
 import { Button } from '../components/Button';
@@ -36,9 +37,10 @@ const STORAGES: { id: Settings['storageDestination']; name: string; sub: string;
 export function OnboardingScreen() {
   const { state, settings, completeOnboardingStep, skipOnboarding, pickStorage } = useApp();
   const step = STEPS[state.onboardStep];
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingTop: insets.top + spacing[6], paddingBottom: insets.bottom }]}>
       <Text style={styles.kicker}>Kairn · {state.onboardStep + 1} sur 3</Text>
 
       <View style={{ paddingTop: 40, paddingBottom: 14, flex: 1 }}>
@@ -87,7 +89,8 @@ export function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[6], backgroundColor: colors.bg },
+  // paddingTop/paddingBottom viennent de la marge de sécurité (barre de statut, geste) + du composant, voir plus haut.
+  root: { flex: 1, paddingHorizontal: spacing[4], backgroundColor: colors.bg },
   kicker: { fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: colors.accent },
   title: { fontFamily: fonts.heading, fontSize: 27, color: colors.text, marginTop: 24, marginBottom: 12, lineHeight: 32 },
   body: { fontSize: 14, lineHeight: 22, color: colors.textDim70 },
