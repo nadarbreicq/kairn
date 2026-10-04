@@ -12,3 +12,4 @@ export * from './formats';
 export * from './analysis';
 export * from './trend';
 export * from './fixtures';
+export * from './mapStyle';
