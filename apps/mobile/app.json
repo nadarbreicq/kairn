@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kairn",
     "slug": "kairn",
-    "version": "0.9.4",
+    "version": "0.9.5",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#161826",
@@ -15,7 +15,7 @@
     "platforms": ["android", "web"],
     "android": {
       "package": "app.kairn.mobile",
-      "versionCode": 904,
+      "versionCode": 905,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-icon-monochrome.png",
