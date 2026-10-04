@@ -46,7 +46,12 @@ try {
   writeFileSync(pkgPath, pkgBefore);
 }
 
-execFileSync(isWindows ? 'gradlew.bat' : './gradlew', ['assembleRelease'], {
+// Architectures embarquées : celles des téléphones (ARM 64 et 32 bits). Les
+// variantes x86 ne servent qu'aux émulateurs et doublaient presque la taille
+// de l'APK ; KAIRN_ABIS=x86_64 (par exemple) les réactive pour un émulateur.
+const abis = process.env.KAIRN_ABIS ?? 'arm64-v8a,armeabi-v7a';
+
+execFileSync(isWindows ? 'gradlew.bat' : './gradlew', ['assembleRelease', `-PreactNativeArchitectures=${abis}`], {
   cwd: join(mobileDir, 'android'),
   stdio: 'inherit',
   shell: isWindows,

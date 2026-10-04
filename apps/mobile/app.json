@@ -30,6 +30,7 @@
     },
     "plugins": [
       "./plugins/withReleaseSigning",
+      "./plugins/withAbiFilters",
       "@maplibre/maplibre-react-native"
     ],
     "web": {

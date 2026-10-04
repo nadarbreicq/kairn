@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { addReleaseSigning } = require('../plugins/withReleaseSigning');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { addAbiFilters } = require('../plugins/withAbiFilters');
 
 /** Extrait de l'android/app/build.gradle généré par `expo prebuild` (SDK 51). */
 const GENERATED = `
@@ -46,5 +48,21 @@ describe('withReleaseSigning', () => {
     const app = JSON.parse(readFileSync(join(__dirname, '..', 'app.json'), 'utf8'));
     const [major, minor, patch] = app.expo.version.split('.').map(Number);
     expect(app.expo.android.versionCode).toBe(major * 10000 + minor * 100 + patch);
+  });
+});
+
+describe('withAbiFilters', () => {
+  const GRADLE = `
+android {
+    defaultConfig {
+        applicationId 'app.kairn.mobile'
+    }
+}
+`;
+  it('filtre les bibliothèques natives selon reactNativeArchitectures, une seule fois', () => {
+    const out: string = addAbiFilters(GRADLE);
+    expect(out).toContain("ndk { abiFilters.addAll(kairnAbis.split(',')*.trim()) }");
+    expect(out.indexOf('abiFilters')).toBeGreaterThan(out.indexOf('defaultConfig {'));
+    expect(addAbiFilters(out)).toBe(out);
   });
 });
