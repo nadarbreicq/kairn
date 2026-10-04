@@ -1,15 +1,7 @@
 import { defaultSessionName, formatClock, formatDateShort } from '../src/format';
 
 describe('formatClock / formatDateShort', () => {
-  const previousTz = process.env.TZ;
-  // Node relit TZ à chaque affectation : le test fixe un fuseau connu
-  // plutôt que de dépendre de celui de la machine qui le lance.
-  beforeAll(() => {
-    process.env.TZ = 'Europe/Paris';
-  });
-  afterAll(() => {
-    process.env.TZ = previousTz;
-  });
+  // Fuseau Europe/Paris fixé pour toute la suite (jest.global-setup.js).
 
   it("affiche l'heure locale, pas l'heure UTC du fichier GPX", () => {
     const start = Date.UTC(2026, 9, 4, 10, 38); // 12:38 à Paris (heure d'été)
