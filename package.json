@@ -17,7 +17,8 @@
     "desk:dev": "npm run dev --workspace apps/desk",
     "mobile:start": "npm run start --workspace apps/mobile",
     "mobile:apk": "npm run apk --workspace apps/mobile",
-    "mobile:apk:install": "npm run apk:install --workspace apps/mobile"
+    "mobile:apk:install": "npm run apk:install --workspace apps/mobile",
+    "demo:sessions": "npm run build:core && node scripts/demo-sessions.mjs"
   },
   "devDependencies": {
     "oxlint": "^0.15.0",
