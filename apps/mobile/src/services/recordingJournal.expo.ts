@@ -1,18 +1,24 @@
 /**
  * Journal de séance sur disque : `kairn/en-cours/` dans les documents de
- * l'app, un `meta.json` et des paquets d'entrées numérotés. Écrire un petit
- * fichier par paquet plutôt que réécrire tout le journal à chaque point
- * évite d'user le stockage sur une sortie de plusieurs heures ; un paquet
- * tronqué (téléphone éteint en pleine écriture) est simplement ignoré.
- *
- * Une seule instance, partagée par la tâche GPS (qui y écrit les positions,
- * même sans interface) et par l'état applicatif (pauses, reprise).
+ * l'app. On y trouve :
+ * - `meta.json` : sport, heure de départ, masquage ;
+ * - `points.jsonl` : une ligne par position, ajoutée par le service GPS
+ *   natif lui-même (voir modules/kairn-location), même sans interface ;
+ * - des paquets numérotés d'entrées écrites par l'app (pauses, reprises).
+ * Écrire par petits ajouts plutôt que réécrire tout le journal évite
+ * d'user le stockage sur une sortie de plusieurs heures ; une ligne ou un
+ * paquet tronqué (téléphone éteint en pleine écriture) est ignoré.
  */
 import * as FileSystem from 'expo-file-system';
+import type { LocationSample } from './location';
 import type { JournalContent, JournalEntry, RecordingJournal, RecordingMeta } from './recordingJournal';
 
 const DIR = `${FileSystem.documentDirectory ?? '(dossier de documents indisponible)/'}kairn/en-cours/`;
 const META = `${DIR}meta.json`;
+const NATIVE_POINTS = `${DIR}points.jsonl`;
+
+/** Dossier du journal, transmis au service GPS natif. */
+export const JOURNAL_DIR = DIR;
 const FLUSH_EVERY_ENTRIES = 20;
 const FLUSH_AFTER_MS = 10_000;
 
@@ -77,6 +83,16 @@ export class ExpoRecordingJournal implements RecordingJournal {
           entries.push(...(JSON.parse(await FileSystem.readAsStringAsync(DIR + file)) as JournalEntry[]));
         } catch {
           // Paquet tronqué par un arrêt brutal : les autres suffisent.
+        }
+      }
+      if ((await FileSystem.getInfoAsync(NATIVE_POINTS)).exists) {
+        for (const line of (await FileSystem.readAsStringAsync(NATIVE_POINTS)).split('\n')) {
+          if (!line.trim()) continue;
+          try {
+            entries.push({ kind: 'point', sample: JSON.parse(line) as LocationSample });
+          } catch {
+            // Dernière ligne tronquée par un arrêt brutal.
+          }
         }
       }
       return { meta, entries };

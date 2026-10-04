@@ -16,7 +16,7 @@ import { AppShell } from './src/AppShell';
 
 import { ExpoSessionStore } from './src/services/sessionStore.expo';
 import { ExpoSettingsStore } from './src/services/settings.expo';
-import { ExpoLocationService } from './src/services/location.expo';
+import { DeviceLocationService } from './src/services/location.device';
 import { ExpoTransferService } from './src/services/transfer.expo';
 import { recordingJournal } from './src/services/recordingJournal.expo';
 import { ExpoSyncFolder } from './src/services/syncFolder.expo';
@@ -39,7 +39,7 @@ const UPDATE_REPO_SLUG = 'nadarbreicq/kairn';
 const services: AppServices = {
   sessionStore: new ExpoSessionStore(),
   settingsStore: new ExpoSettingsStore(),
-  createLocationService: () => new ExpoLocationService(),
+  createLocationService: () => new DeviceLocationService(),
   transferService: new ExpoTransferService(),
   // La même instance que celle où la tâche GPS écrit les positions.
   recordingJournal,

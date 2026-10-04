@@ -1,0 +1,13 @@
+<!-- La marque Kairn en silhouette blanche, pour la barre de notifications. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="80"
+    android:viewportHeight="80">
+  <group android:translateX="6">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M2,79 L4,66 L26,62 L52,63 L66,69 L65,79 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M10,58 L12,45 L34,40 L58,46 L60,54 L56,58 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M8,38 L6,27 L22,21 L42,23 L48,31 L44,38 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M22,18 L20,8 L32,2 L46,5 L52,12 L48,18 Z" />
+  </group>
+</vector>

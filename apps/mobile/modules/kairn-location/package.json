@@ -1,0 +1,8 @@
+{
+  "name": "kairn-location",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Suivi GPS de Kairn : service Android au premier plan sur le GPS du système, sans Google Play Services.",
+  "license": "MIT",
+  "main": "index.ts"
+}

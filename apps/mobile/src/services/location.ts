@@ -1,9 +1,9 @@
 /**
  * Interface de la source de position — l'écran d'enregistrement ne connaît
- * que cette forme, jamais expo-location directement. Ça permet de tester
+ * que cette forme, jamais le module GPS natif directement. Ça permet de tester
  * tout le pipeline d'enregistrement sans GPS ni appareil (voir
  * `SimulatedLocationService` ci-dessous), et l'implémentation réelle vit à
- * part dans `location.expo.ts`.
+ * part dans `location.device.ts`.
  */
 export interface LocationSample {
   lat: number;

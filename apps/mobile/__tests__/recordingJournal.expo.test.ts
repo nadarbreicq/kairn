@@ -80,6 +80,18 @@ describe('ExpoRecordingJournal', () => {
     expect((await journal.load())?.entries).toHaveLength(20);
   });
 
+  it('relit les positions ajoutées ligne à ligne par le service GPS natif, ligne tronquée comprise', async () => {
+    const journal = new ExpoRecordingJournal();
+    await journal.begin(meta);
+    journal.record({ kind: 'pause', t: 3000 });
+    await journal.flush();
+    files.set(`${DIR}points.jsonl`, '{"lat":45,"lon":5,"t":1000}\n{"lat":45.1,"lon":5,"t":2000,"accuracy":4}\n{"lat":45.2,"lo');
+
+    const entries = (await journal.load())?.entries ?? [];
+    expect(entries.filter((e) => e.kind === 'point')).toHaveLength(2);
+    expect(entries.some((e) => e.kind === 'pause')).toBe(true);
+  });
+
   it('se vide entièrement à la fin de la séance', async () => {
     const journal = new ExpoRecordingJournal();
     await journal.begin(meta);

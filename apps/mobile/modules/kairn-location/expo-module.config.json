@@ -1,0 +1,7 @@
+{
+  "name": "kairn-location",
+  "platforms": ["android"],
+  "android": {
+    "modules": ["app.kairn.location.KairnLocationModule"]
+  }
+}

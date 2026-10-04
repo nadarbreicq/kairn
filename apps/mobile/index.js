@@ -5,9 +5,6 @@
  * donc pas ici. `registerRootComponent` reste résolu normalement.
  */
 import { registerRootComponent } from 'expo';
-// Déclare la tâche de suivi GPS avant tout rendu : Android peut relancer le
-// service d'enregistrement sans ouvrir d'écran (voir location.expo.ts).
-import './src/services/location.expo';
 import App from './App';
 
 registerRootComponent(App);

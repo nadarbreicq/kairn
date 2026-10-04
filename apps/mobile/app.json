@@ -30,15 +30,7 @@
     },
     "plugins": [
       "./plugins/withReleaseSigning",
-      "@maplibre/maplibre-react-native",
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "Kairn utilise la position pour enregistrer le tracé de la séance en cours, y compris quand l'écran est verrouillé.",
-          "isAndroidBackgroundLocationEnabled": false,
-          "isAndroidForegroundServiceEnabled": true
-        }
-      ]
+      "@maplibre/maplibre-react-native"
     ],
     "web": {
       "bundler": "metro"
