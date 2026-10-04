@@ -3,7 +3,11 @@ name: Publication
 # Publier une version : monter `version` (et `android.versionCode`) dans
 # apps/mobile/app.json, commiter, puis pousser le tag correspondant :
 #   git tag v0.9.5 && git push origin v0.9.5
-# L'app installée trouve la release via l'API GitHub et propose la mise à jour.
+#
+# La release part en préversion : seules les apps où « Inclure les
+# préversions » est coché la proposent. Une fois essayée, la passer en
+# version stable, proposée à tout le monde :
+#   gh release edit v0.9.5 --prerelease=false --latest
 
 on:
   push:
@@ -74,7 +78,7 @@ jobs:
           APK="kairn-$VERSION.apk"
           cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$APK"
           sha256sum "$APK" > "$APK.sha256"
-          gh release create "$GITHUB_REF_NAME" "$APK" "$APK.sha256" --title "Kairn $VERSION" --generate-notes
+          gh release create "$GITHUB_REF_NAME" "$APK" "$APK.sha256" --title "Kairn $VERSION" --generate-notes --prerelease
 
       - name: Effacer la clé
         if: always()

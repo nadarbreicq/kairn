@@ -18,6 +18,8 @@ Tous les écrans, de l'app comme de Kairn Desk, sont présentés dans [Kairn en 
 
 **Étape 3 :** ouvrez Kairn. Les versions suivantes se proposent d'elles-mêmes dans l'app (Réglages → Mises à jour) : elles s'installent par-dessus, sans perdre vos séances. Android vérifie que chaque mise à jour est signée par le projet, et refuse tout fichier d'une autre provenance.
 
+Chaque version paraît d'abord en **préversion** (étiquette *Pre-release* sur la page des versions) : seules les apps où « Inclure les préversions » est coché dans les Réglages la proposent. Elle est proposée à tout le monde une fois passée en version stable.
+
 Vous préférez fabriquer l'APK vous-même, ou aucune version n'est encore publiée ? Voir [Obtenir un fichier installable (APK)](#obtenir-un-fichier-installable-apk) plus bas.
 
 **Aperçu rapide, sans GPS :** avec l'application Expo Go et `npm run mobile:start` sur un ordinateur, on peut parcourir l'interface en scannant le QR code affiché. L'enregistrement d'une trace, lui, demande l'application installée : il passe par un module GPS propre à Kairn, qu'Expo Go ne contient pas.
