@@ -61,6 +61,18 @@
       "problemMatcher": []
     },
     {
+      "label": "Mobile : construire l'APK installable",
+      "type": "shell",
+      "command": "npm run mobile:apk",
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile : installer l'APK sur le téléphone (USB)",
+      "type": "shell",
+      "command": "npm run mobile:apk:install",
+      "problemMatcher": []
+    },
+    {
       "label": "Mobile : lancer les tests",
       "type": "shell",
       "command": "npm run test:mobile",

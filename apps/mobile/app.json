@@ -6,6 +6,10 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#161826",
+    "splash": {
+      "backgroundColor": "#161826",
+      "resizeMode": "contain"
+    },
     "platforms": ["android", "web"],
     "android": {
       "package": "app.kairn.mobile",
