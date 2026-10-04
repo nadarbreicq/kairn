@@ -39,6 +39,11 @@ jobs:
       # défaut (ça change avec le temps, et l'acceptation des licences est
       # la cause la plus fréquente d'échec au premier essai en CI).
       - uses: android-actions/setup-android@v3
+        with:
+          # Par défaut l'action installe aussi « tools », paquet retiré des
+          # dépôts Google : l'installation échoue. Gradle télécharge seul
+          # la plateforme et les build-tools dont le projet a besoin.
+          packages: 'platform-tools'
       # Cache les dépendances Gradle entre les exécutions : la première
       # compilation reste longue, les suivantes sont nettement plus rapides.
       - uses: gradle/actions/setup-gradle@v4

@@ -27,6 +27,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          # Par défaut l'action installe aussi « tools », paquet retiré des
+          # dépôts Google : l'installation échoue. Gradle télécharge seul
+          # la plateforme et les build-tools dont le projet a besoin.
+          packages: 'platform-tools'
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Vérifier que le tag correspond à la version de l'app
