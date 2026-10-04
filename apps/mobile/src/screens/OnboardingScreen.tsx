@@ -5,7 +5,7 @@ import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icons';
-import type { Settings } from '../services/settings';
+import { STORAGE_OPTIONS } from '../storageOptions';
 
 const STEPS = [
   {
@@ -17,7 +17,7 @@ const STEPS = [
   {
     icon: 'M12 21s7-6.5 7-11a7 7 0 1 0-14 0c0 4.5 7 11 7 11z',
     title: 'Le GPS fonctionne hors ligne',
-    body: "Les tuiles OpenStreetMap de votre zone sont téléchargées avant la sortie. Pendant l'effort, l'app n'ouvre aucune connexion : la position est lue par le capteur, rien n'est interrogé à distance.",
+    body: "La position est lue par la puce GPS du téléphone, sans réseau. Seul le fond de carte se télécharge, puis reste sur le téléphone ; il se désactive dans les réglages.",
     cta: 'Suivant',
   },
   {
@@ -28,11 +28,6 @@ const STEPS = [
   },
 ];
 
-const STORAGES: { id: Settings['storageDestination']; name: string; sub: string; open: boolean }[] = [
-  { id: 'local', name: 'Base locale du téléphone', sub: "Par défaut. Rien ne quitte l'appareil.", open: true },
-  { id: 'gpx', name: 'Export GPX manuel', sub: 'Un fichier, écrit quand vous le décidez.', open: true },
-  { id: 'drive', name: 'Google Drive', sub: 'Service fermé. Dossier choisi par vous, chiffré, activation manuelle.', open: false },
-];
 
 export function OnboardingScreen() {
   const { state, settings, completeOnboardingStep, skipOnboarding, pickStorage } = useApp();
@@ -50,7 +45,7 @@ export function OnboardingScreen() {
 
         {state.onboardStep === 2 && (
           <View style={{ gap: spacing[2], marginTop: spacing[3] }}>
-            {STORAGES.map((d) => {
+            {STORAGE_OPTIONS.map((d) => {
               const selected = settings.storageDestination === d.id;
               return (
                 <Pressable
@@ -65,7 +60,6 @@ export function OnboardingScreen() {
                     <Text style={{ color: colors.text, fontSize: 13.5 }}>{d.name}</Text>
                     <Text style={{ color: colors.textDim50, fontSize: 11.5, marginTop: 2 }}>{d.sub}</Text>
                   </View>
-                  <Text style={{ fontSize: 11, color: d.open ? colors.accent200 : colors.neutral200 }}>{d.open ? 'Ouvert' : 'Fermé'}</Text>
                 </Pressable>
               );
             })}

@@ -6,36 +6,42 @@ import { Button } from '../components/Button';
 import { Card, SectionTitle, ToggleRow } from '../components/Basics';
 import { LockIcon } from '../components/Icons';
 import { APP_VERSION } from '../version';
-import type { Settings } from '../services/settings';
-
-const STORAGES: { id: Settings['storageDestination']; name: string; sub: string; open: boolean }[] = [
-  { id: 'local', name: 'Base locale du téléphone', sub: "Par défaut. Rien ne quitte l'appareil.", open: true },
-  { id: 'gpx', name: 'Export GPX manuel', sub: 'Un fichier, écrit quand vous le décidez.', open: true },
-  { id: 'drive', name: 'Google Drive', sub: 'Service fermé. Dossier choisi par vous, chiffré, activation manuelle.', open: false },
-];
+import { STORAGE_OPTIONS } from '../storageOptions';
 
 const UPDATE_LABEL: Record<string, string> = {
   idle: 'À jour',
   checking: 'Vérification…',
   found: 'Nouvelle version disponible',
-  error: 'Vérification impossible',
+  downloading: 'Téléchargement…',
+  ready: 'Prête à installer',
+  error: 'Mise à jour impossible',
 };
 
+function updateButtonTitle(phase: string, hasApk: boolean): string {
+  if (phase === 'found') return hasApk ? 'Télécharger et installer' : 'Voir sur GitHub';
+  if (phase === 'downloading') return 'Téléchargement…';
+  if (phase === 'ready') return 'Installer';
+  if (phase === 'error' && hasApk) return 'Réessayer';
+  return 'Vérifier';
+}
+
 export function PrivacyScreen() {
-  const { state, settings, pickStorage, setMask, setUpdateOption, checkForUpdate, services } = useApp();
+  const { state, settings, pickStorage, changeSyncFolder, syncAllSessions, setMask, setUpdateOption, setMapEnabled, checkForUpdate, installUpdate, services } = useApp();
+  const folderActive = settings.storageDestination === 'folder' && settings.syncFolder;
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing[4] }}>
       <View style={styles.banner}>
         <LockIcon size={17} color={colors.accent300} />
         <Text style={styles.bannerText}>
-          Aucune donnée n'est sortie de cet appareil depuis l'installation. {state.sessions.length} session{state.sessions.length > 1 ? 's' : ''} dans la base locale.
+          {state.sessions.length} séance{state.sessions.length > 1 ? 's' : ''} dans la base locale du téléphone
+          {folderActive ? `, copiée${state.sessions.length > 1 ? 's' : ''} dans « ${settings.syncFolder?.label} »` : ''}. Pas de compte, pas de serveur Kairn.
         </Text>
       </View>
 
       <SectionTitle>Destination des sauvegardes</SectionTitle>
       <View style={{ gap: spacing[2], marginBottom: spacing[6] }}>
-        {STORAGES.map((d) => {
+        {STORAGE_OPTIONS.map((d) => {
           const selected = settings.storageDestination === d.id;
           return (
             <Pressable
@@ -50,18 +56,36 @@ export function PrivacyScreen() {
                 <Text style={{ color: colors.text, fontSize: 13.5 }}>{d.name}</Text>
                 <Text style={{ color: colors.textDim45, fontSize: 11.5, marginTop: 2 }}>{d.sub}</Text>
               </View>
-              <Text style={{ fontSize: 11, color: d.open ? colors.accent200 : colors.neutral200 }}>{d.open ? 'Ouvert' : 'Fermé'}</Text>
             </Pressable>
           );
         })}
       </View>
+
+      {folderActive && (
+        <Card style={{ marginTop: -spacing[3], marginBottom: spacing[6], gap: spacing[2] }}>
+          <Text style={{ color: colors.text, fontSize: 13 }}>Dossier : {settings.syncFolder?.label}</Text>
+          <Text testID="syncStatus" style={{ color: state.sync.phase === 'error' ? colors.accent300 : colors.textDim50, fontSize: 11.5 }}>
+            {state.sync.phase === 'syncing'
+              ? 'Copie en cours…'
+              : state.sync.phase === 'error'
+                ? state.sync.error
+                : state.sync.imported
+                  ? `${state.sync.imported} séance${state.sync.imported > 1 ? 's' : ''} récupérée${state.sync.imported > 1 ? 's' : ''} depuis le dossier. Chaque nouvelle séance y est écrite automatiquement.`
+                  : 'Chaque nouvelle séance y est écrite automatiquement.'}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: spacing[2] }}>
+            <Button title="Changer de dossier" onPress={changeSyncFolder} disabled={state.sync.phase === 'syncing'} style={{ flex: 1 }} />
+            <Button title="Synchroniser" onPress={syncAllSessions} disabled={state.sync.phase === 'syncing'} style={{ flex: 1 }} />
+          </View>
+        </Card>
+      )}
 
       <SectionTitle>Emplacement des fichiers</SectionTitle>
       <Card style={{ marginBottom: spacing[6] }}>
         <Text style={styles.kicker}>Dossier des sessions</Text>
         <Text style={styles.path}>{services.sessionStore.describeLocation()}</Text>
         <Text style={{ fontSize: 11, lineHeight: 16, color: colors.textDim45, marginTop: 8 }}>
-          Un fichier GPX par session. Visible par le gestionnaire de fichiers et par le câble USB — c'est ce dossier que Kairn Desk lit une fois synchronisé.
+          Un fichier GPX par séance, dans le dossier interne de l'app : Android le cache aux autres apps et au câble USB. Pour retrouver vos fichiers ailleurs (Kairn Desk, sauvegarde), choisissez « Dossier de votre choix » ci-dessus.
         </Text>
       </Card>
 
@@ -73,17 +97,15 @@ export function PrivacyScreen() {
           value={settings.masks.maskStartEnd}
           onChange={(v) => setMask('maskStartEnd', v)}
         />
+      </View>
+
+      <SectionTitle>Fond de carte</SectionTitle>
+      <View style={{ gap: spacing[2], marginBottom: spacing[6] }}>
         <ToggleRow
-          title="Chiffrer avant envoi"
-          subtitle="Pas encore disponible dans cette version"
-          value={false}
-          onChange={() => {}}
-        />
-        <ToggleRow
-          title="Inclure la fréquence cardiaque"
-          subtitle="Donnée de santé, exclue par défaut"
-          value={settings.masks.includeHeartRate}
-          onChange={(v) => setMask('includeHeartRate', v)}
+          title="Afficher le fond de carte"
+          subtitle="Tuiles OpenStreetMap (OpenFreeMap) téléchargées à l'affichage puis gardées sur le téléphone. Désactivé : aucune requête, la trace reste dessinée seule."
+          value={settings.map.enabled}
+          onChange={setMapEnabled}
         />
       </View>
 
@@ -97,23 +119,27 @@ export function PrivacyScreen() {
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: colors.text, fontSize: 13 }}>{UPDATE_LABEL[state.update.phase]}</Text>
-            {state.update.phase === 'found' && state.update.version && (
+            {(state.update.phase === 'found' || state.update.phase === 'ready') && state.update.version && (
               <Text style={{ color: colors.textDim50, fontSize: 11.5, marginTop: 2 }}>Version {state.update.version}</Text>
+            )}
+            {state.update.phase === 'downloading' && (
+              <Text testID="updateProgress" style={{ color: colors.textDim50, fontSize: 11.5, marginTop: 2 }}>
+                {state.update.progressPct} %
+              </Text>
             )}
             {state.update.phase === 'error' && state.update.error && (
               <Text style={{ color: colors.textDim50, fontSize: 11.5, marginTop: 2 }}>{state.update.error}</Text>
             )}
           </View>
           <Button
-            title={state.update.phase === 'found' ? 'Voir sur GitHub' : 'Vérifier'}
+            title={updateButtonTitle(state.update.phase, !!state.update.assetUrl)}
             variant="primary"
-            disabled={state.update.phase === 'checking'}
+            disabled={state.update.phase === 'checking' || state.update.phase === 'downloading'}
             onPress={() => {
-              if (state.update.phase === 'found') {
-                Linking.openURL(`https://github.com/${services.updateRepoSlug}/releases`);
-              } else {
-                checkForUpdate();
-              }
+              const { phase, assetUrl } = state.update;
+              if ((phase === 'found' || phase === 'ready' || phase === 'error') && assetUrl) installUpdate();
+              else if (phase === 'found') Linking.openURL(`https://github.com/${services.updateRepoSlug}/releases`);
+              else checkForUpdate();
             }}
           />
         </View>

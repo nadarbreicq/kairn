@@ -6,8 +6,9 @@ import { Button } from '../components/Button';
 import { Card, SectionTitle, SegmentedRow } from '../components/Basics';
 import { PinIcon } from '../components/Icons';
 import { sportOptions } from '../format';
+import { STORAGE_SHORT_LABEL } from '../storageOptions';
+import { BatteryTipCard } from '../components/BatteryTipCard';
 
-const STORAGE_LABEL: Record<string, string> = { local: 'Local', gpx: 'GPX', drive: 'Drive' };
 
 export function RecordScreen() {
   const { state, settings, pickSport, startRecording, go } = useApp();
@@ -25,26 +26,24 @@ export function RecordScreen() {
           <Text style={{ color: colors.text, fontSize: 13 }}>La position démarre à l'appui sur Démarrer</Text>
         </View>
         <Text style={{ fontSize: 11, lineHeight: 16, color: colors.textDim45 }}>
-          Tuiles OpenStreetMap de la zone mises en cache avant la sortie. Aucune requête réseau pendant la séance.
+          Le GPS fonctionne sans réseau. Le fond de carte (OpenStreetMap) réutilise les tuiles déjà vues ; une zone nouvelle se charge si le réseau est disponible, sinon la trace s'affiche seule.
         </Text>
-      </Card>
-
-      <Card style={[styles.row, { marginBottom: spacing[3] }]}>
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.text, fontSize: 13 }}>Destination de la session</Text>
-          <Text style={{ color: colors.textDim50, fontSize: 11.5, marginTop: 2 }}>Destination ouverte · aucune dépendance externe</Text>
-        </View>
-        <Button title={STORAGE_LABEL[settings.storageDestination]} onPress={() => go('privacy')} />
       </Card>
 
       <Card style={[styles.row, { marginBottom: spacing[6] }]}>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.text, fontSize: 13 }}>Objectif de séance</Text>
-          <Text style={{ color: colors.textDim50, fontSize: 11.5, marginTop: 2 }}>Aucun · enregistrement libre</Text>
+          <Text style={{ color: colors.text, fontSize: 13 }}>Destination de la session</Text>
+          <Text style={{ color: colors.textDim50, fontSize: 11.5, marginTop: 2 }}>Destination ouverte · aucune dépendance externe</Text>
         </View>
-        <Button title="Définir" variant="ghost" disabled />
+        <Button title={STORAGE_SHORT_LABEL[settings.storageDestination]} onPress={() => go('privacy')} />
       </Card>
 
+      {state.live.error && (
+        <Text testID="recordError" style={styles.error}>
+          {state.live.error}
+        </Text>
+      )}
+      <BatteryTipCard />
       <Button title="DÉMARRER" variant="primary" block onPress={startRecording} style={{ height: 56 }} />
       <Text style={styles.footnote}>Écran verrouillable pendant l'enregistrement.</Text>
     </ScrollView>
@@ -54,5 +53,6 @@ export function RecordScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
+  error: { fontSize: 12, lineHeight: 17, color: colors.text, backgroundColor: colors.surface, borderRadius: 8, padding: spacing[3], marginBottom: spacing[3] },
   footnote: { textAlign: 'center', fontSize: 11, color: colors.textDim40, marginTop: spacing[3] },
 });

@@ -3,30 +3,54 @@
  * démarrage. `InMemorySettingsStore` sert aux tests ; la version réelle
  * (`settings.expo.ts`) passe par AsyncStorage.
  */
-import type { GranularityId } from '@kairn/core';
+import type { SyncFolderRef } from './syncFolder';
 
-export type StorageDestinationId = 'local' | 'gpx' | 'drive';
-export type FileNamePatternId = 'date' | 'sport' | 'id';
+export type StorageDestinationId = 'local' | 'folder';
 
 export interface Settings {
   onboardingDone: boolean;
   storageDestination: StorageDestinationId;
-  drivePath: string;
-  filenamePattern: FileNamePatternId;
-  granularity: GranularityId | 'auto';
-  masks: { maskStartEnd: boolean; encrypt: boolean; includeHeartRate: boolean };
+  /** Dossier choisi pour la destination « Dossier de votre choix ». */
+  syncFolder: SyncFolderRef | null;
+  masks: { maskStartEnd: boolean };
   updates: { checkOnLaunch: boolean; includePrereleases: boolean };
+  /** Fond de carte : désactivé, aucune tuile n'est demandée au réseau (la trace reste dessinée seule). */
+  map: { enabled: boolean };
+  /** Conseil batterie de l'écran de préparation masqué par l'utilisateur. */
+  batteryTipDismissed: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   onboardingDone: false,
   storageDestination: 'local',
-  drivePath: 'Drive:/Kairn/sessions',
-  filenamePattern: 'date',
-  granularity: 'auto',
-  masks: { maskStartEnd: true, encrypt: false, includeHeartRate: false },
+  syncFolder: null,
+  masks: { maskStartEnd: true },
   updates: { checkOnLaunch: true, includePrereleases: false },
+  map: { enabled: true },
+  batteryTipDismissed: false,
 };
+
+/**
+ * Réglages relus depuis le stockage, complétés des valeurs par défaut. Les
+ * destinations des premières versions (« Export GPX manuel », « Google
+ * Drive », jamais branchées) reviennent à la base locale.
+ */
+export function normalizeSettings(stored: Partial<Settings> & Record<string, unknown>): Settings {
+  const merged = { ...DEFAULT_SETTINGS, ...stored } as Settings;
+  const destination: StorageDestinationId = merged.storageDestination === 'folder' && merged.syncFolder ? 'folder' : 'local';
+  return {
+    onboardingDone: merged.onboardingDone,
+    storageDestination: destination,
+    syncFolder: merged.syncFolder ?? null,
+    masks: { maskStartEnd: merged.masks?.maskStartEnd ?? DEFAULT_SETTINGS.masks.maskStartEnd },
+    updates: {
+      checkOnLaunch: merged.updates?.checkOnLaunch ?? DEFAULT_SETTINGS.updates.checkOnLaunch,
+      includePrereleases: merged.updates?.includePrereleases ?? DEFAULT_SETTINGS.updates.includePrereleases,
+    },
+    map: { enabled: merged.map?.enabled ?? DEFAULT_SETTINGS.map.enabled },
+    batteryTipDismissed: merged.batteryTipDismissed ?? false,
+  };
+}
 
 export interface SettingsStore {
   load(): Promise<Settings>;

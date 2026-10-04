@@ -76,7 +76,7 @@ export function TransferScreen() {
       <Card style={{ marginBottom: spacing[6] }}>
         <Text style={{ color: colors.text, fontSize: 13, marginBottom: 5 }}>Depuis un fichier GPX</Text>
         <Text style={{ fontSize: 11.5, lineHeight: 17, color: colors.textDim50, marginBottom: 11 }}>
-          L'analyse se fait sur l'appareil. Le FIT et le TCX ne sont pas encore pris en charge.
+          L'analyse se fait sur l'appareil, rien n'est envoyé.
         </Text>
         <Button title="Parcourir" onPress={handleImport} disabled={busy} />
       </Card>

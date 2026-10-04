@@ -58,3 +58,19 @@ export function buildAreaPath(values: number[], width: number, height: number, p
   const line = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
   return { line, area: `${line} L${width} ${height} L0 ${height} Z` };
 }
+
+/** Emprise d'une trace, au format attendu par la caméra MapLibre ([lon, lat]). */
+export function traceBounds(points: LatLon[]): { ne: [number, number]; sw: [number, number] } | null {
+  if (points.length === 0) return null;
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let minLon = Infinity;
+  let maxLon = -Infinity;
+  for (const p of points) {
+    if (p.lat < minLat) minLat = p.lat;
+    if (p.lat > maxLat) maxLat = p.lat;
+    if (p.lon < minLon) minLon = p.lon;
+    if (p.lon > maxLon) maxLon = p.lon;
+  }
+  return { ne: [maxLon, maxLat], sw: [minLon, minLat] };
+}

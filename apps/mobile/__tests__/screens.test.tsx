@@ -2,13 +2,18 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 import { generateSyntheticSession } from '@kairn/core';
-import { AppProvider, type AppServices } from '../src/store/AppContext';
+import { AppProvider, useApp, type AppServices } from '../src/store/AppContext';
 import { InMemorySessionStore } from '../src/services/sessionStore';
 import { InMemorySettingsStore } from '../src/services/settings';
 import { SimulatedLocationService } from '../src/services/location';
 import { RecordingTransferService } from '../src/services/transfer';
+import { InMemorySyncFolder } from '../src/services/syncFolder';
+import { FakeUpdateInstaller } from '../src/services/updateInstaller';
+import { InMemoryRecordingJournal } from '../src/services/recordingJournal';
 import { OnboardingScreen } from '../src/screens/OnboardingScreen';
 import { HomeScreen } from '../src/screens/HomeScreen';
+import { RecordScreen } from '../src/screens/RecordScreen';
+import { LiveScreen } from '../src/screens/LiveScreen';
 
 function makeServices(overrides: Partial<AppServices> = {}): AppServices {
   return {
@@ -16,6 +21,9 @@ function makeServices(overrides: Partial<AppServices> = {}): AppServices {
     settingsStore: new InMemorySettingsStore(),
     createLocationService: () => new SimulatedLocationService({ intervalMs: 1000, seed: 1 }),
     transferService: new RecordingTransferService(),
+    recordingJournal: new InMemoryRecordingJournal(),
+    syncFolder: new InMemorySyncFolder(),
+    updateInstaller: new FakeUpdateInstaller(),
     updateRepoSlug: 'kairn-app/kairn',
     ...overrides,
   };
@@ -43,7 +51,7 @@ describe('OnboardingScreen', () => {
     fireEvent.press(getByText('Suivant'));
     await findByText('Où ranger vos sessions');
     await findByText('Base locale du téléphone');
-    await findByText('Google Drive');
+    await findByText('Dossier de votre choix');
   });
 });
 
@@ -65,5 +73,48 @@ describe('HomeScreen', () => {
     const services = makeServices({ settingsStore: new InMemorySettingsStore({ onboardingDone: true }) });
     const { findByText } = renderScreen(services, <HomeScreen />);
     await findByText(/Aucune session pour l'instant/);
+  });
+});
+
+/** Préparation puis enregistrement, comme l'enchaînement réel de l'app. */
+function RecordFlow() {
+  const { state } = useApp();
+  if (!state.ready) return null;
+  return state.screen === 'live' ? <LiveScreen /> : <RecordScreen />;
+}
+
+describe('RecordScreen / LiveScreen', () => {
+  it('affiche la raison sur la préparation quand la position est refusée', async () => {
+    const refused = new SimulatedLocationService({ intervalMs: 1000, seed: 1 });
+    jest.spyOn(refused, 'start').mockRejectedValue(new Error("Position refusée : Kairn ne peut pas enregistrer de trace sans accès au GPS."));
+    const services = makeServices({ createLocationService: () => refused });
+
+    const { findByText, findByTestId } = renderScreen(services, <RecordFlow />);
+    fireEvent.press(await findByText('DÉMARRER'));
+
+    expect((await findByTestId('recordError')).props.children).toMatch(/Position refusée/);
+  });
+
+  it("prévient qu'il faut garder l'écran allumé quand le suivi écran verrouillé est indisponible", async () => {
+    const foregroundOnly = new SimulatedLocationService({ intervalMs: 1000, seed: 1 });
+    jest.spyOn(foregroundOnly, 'start').mockResolvedValue({ background: false });
+    const services = makeServices({ createLocationService: () => foregroundOnly });
+
+    const { findByText, findByTestId } = renderScreen(services, <RecordFlow />);
+    fireEvent.press(await findByText('DÉMARRER'));
+
+    expect((await findByTestId('foregroundOnly')).props.children).toMatch(/gardez l'écran allumé/);
+  });
+
+  it("n'affiche pas l'avertissement quand le suivi continue écran verrouillé", async () => {
+    const services = makeServices();
+    const { findByText, queryByTestId } = renderScreen(services, <RecordFlow />);
+    fireEvent.press(await findByText('DÉMARRER'));
+
+    const stopButton = await findByText('Terminer');
+    expect(queryByTestId('foregroundOnly')).toBeNull();
+    // Arrêt du suivi simulé pour ne pas laisser de minuterie active.
+    fireEvent.press(stopButton);
+    await findByText('DÉMARRER');
   });
 });

@@ -5,10 +5,11 @@ import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
 import { StatTile, Tag } from '../components/Basics';
 import { TraceThumbnail } from '../components/TraceThumbnail';
+import { RecoveryCard } from '../components/RecoveryCard';
 import { formatDateShort, formatKm } from '../format';
 
 export function HomeScreen() {
-  const { state, openSession } = useApp();
+  const { state, openSession, go } = useApp();
 
   const thisWeek = useMemo(() => groupByIsoWeek(state.sessions, { weeks: 1 })[0], [state.sessions]);
   const weekElevGain = useMemo(
@@ -18,6 +19,13 @@ export function HomeScreen() {
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[6] }}>
+      <RecoveryCard />
+      {state.update.phase === 'found' && state.update.version && (
+        <Pressable testID="updateBanner" onPress={() => go('privacy')} style={styles.updateBanner}>
+          <Text style={styles.updateText}>Kairn {state.update.version} est disponible</Text>
+          <Text style={styles.updateLink}>Voir</Text>
+        </Pressable>
+      )}
       <View style={styles.statsGrid}>
         <StatTile kicker="Semaine" value={formatKm(thisWeek?.distanceMeters ?? 0)} unit="km" />
         <StatTile kicker="Temps" value={formatDuration(thisWeek?.durationSeconds ?? 0)} unit={`${thisWeek?.count ?? 0} sortie${(thisWeek?.count ?? 0) > 1 ? 's' : ''}`} />
@@ -64,6 +72,9 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  updateBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.accent900, borderRadius: 8, padding: spacing[3], marginBottom: spacing[4] },
+  updateText: { flex: 1, color: colors.text, fontSize: 13 },
+  updateLink: { color: colors.accent300, fontSize: 13 },
   root: { flex: 1, backgroundColor: colors.bg },
   statsGrid: { flexDirection: 'row', gap: spacing[2], marginBottom: spacing[6] },
   sectionHeader: { flexDirection: 'row', alignItems: 'baseline', marginBottom: spacing[3] },

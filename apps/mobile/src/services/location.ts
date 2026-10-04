@@ -11,11 +11,26 @@ export interface LocationSample {
   ele?: number;
   /** ms depuis epoch UTC. */
   t: number;
+  /** Rayon d'incertitude horizontal estimé par le système, en mètres, s'il est connu. */
+  accuracy?: number;
+}
+
+export interface LocationStartInfo {
+  /**
+   * Vrai si le suivi continue écran verrouillé ou app en arrière-plan. Faux
+   * quand l'implémentation a dû se replier sur un suivi au premier plan
+   * (Expo Go, service refusé par le système) : l'écran d'enregistrement le
+   * signale plutôt que de laisser croire que la trace continue.
+   */
+  background: boolean;
 }
 
 export interface LocationService {
-  /** Démarre le flux de positions ; `onSample` est appelé à chaque nouveau point. */
-  start(onSample: (sample: LocationSample) => void): Promise<void>;
+  /**
+   * Démarre le flux de positions ; `onSample` est appelé à chaque nouveau point.
+   * Rejette si la position est refusée — rien n'est alors en cours.
+   */
+  start(onSample: (sample: LocationSample) => void): Promise<LocationStartInfo>;
   stop(): void;
 }
 
@@ -56,7 +71,7 @@ export class SimulatedLocationService implements LocationService {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
-  async start(onSample: (sample: LocationSample) => void): Promise<void> {
+  async start(onSample: (sample: LocationSample) => void): Promise<LocationStartInfo> {
     const mPerLon = METERS_PER_DEG_LAT * Math.cos((this.lat * Math.PI) / 180);
     const emit = () => {
       const speedMps = (this.speedKmh / 3.6) * (1 + 0.1 * Math.sin(this.i * 0.1));
@@ -69,6 +84,7 @@ export class SimulatedLocationService implements LocationService {
     };
     emit();
     this.timer = setInterval(emit, this.intervalMs);
+    return { background: true };
   }
 
   stop(): void {

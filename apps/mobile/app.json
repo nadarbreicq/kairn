@@ -23,15 +23,18 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "FOREGROUND_SERVICE"
+        "POST_NOTIFICATIONS",
+        "REQUEST_INSTALL_PACKAGES"
       ]
     },
     "plugins": [
+      "@maplibre/maplibre-react-native",
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Kairn utilise la position pour enregistrer le tracé de la séance en cours, y compris quand l'écran est verrouillé."
+          "locationWhenInUsePermission": "Kairn utilise la position pour enregistrer le tracé de la séance en cours, y compris quand l'écran est verrouillé.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": true
         }
       ]
     ],

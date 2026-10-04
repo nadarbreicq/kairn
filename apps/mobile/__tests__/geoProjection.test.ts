@@ -1,4 +1,4 @@
-import { buildAreaPath, projectTracePath } from '../src/geoProjection';
+import { buildAreaPath, projectTracePath, traceBounds } from '../src/geoProjection';
 
 describe('projectTracePath', () => {
   it("renvoie une chaîne vide pour une liste vide", () => {
@@ -48,5 +48,20 @@ describe('buildAreaPath', () => {
     expect(area.endsWith('Z')).toBe(true);
     expect(area).toContain('L60 40');
     expect(area).toContain('L0 40');
+  });
+});
+
+describe('traceBounds', () => {
+  it('donne l\'emprise [lon, lat] attendue par la caméra de la carte', () => {
+    const b = traceBounds([
+      { lat: 45.0, lon: 5.2 },
+      { lat: 45.3, lon: 5.0 },
+      { lat: 45.1, lon: 5.4 },
+    ]);
+    expect(b).toEqual({ ne: [5.4, 45.3], sw: [5.0, 45.0] });
+  });
+
+  it('renvoie null pour une trace vide', () => {
+    expect(traceBounds([])).toBeNull();
   });
 });

@@ -12,8 +12,7 @@ export interface TransferService {
   exportSession(session: Session, format: ExportFormat, options: ExportOptions): Promise<string>;
   /**
    * Ouvre le sélecteur de fichiers et importe un GPX. `null` si l'utilisateur
-   * annule. Le FIT et le TCX, mentionnés comme formats d'import possibles,
-   * ne sont pas encore pris en charge — voir README.
+   * annule.
    */
   importGpx(): Promise<Session | null>;
 }

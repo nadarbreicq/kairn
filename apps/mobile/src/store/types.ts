@@ -21,6 +21,20 @@ export interface LiveState {
   paused: boolean;
   startedAt: number | null;
   points: LocationSample[];
+  /** Suivi écran verrouillé actif ; `null` tant que le GPS n'a pas encore démarré. */
+  background: boolean | null;
+  /** Raison du dernier démarrage manqué (position refusée…), affichée sur l'écran de préparation. */
+  error: string | null;
+  /** Séance reprise d'elle-même après une interruption (app tuée ou balayée). */
+  resumed: boolean;
+}
+
+/** Séance non terminée trouvée au lancement, trop ancienne pour reprendre d'elle-même. */
+export interface RecoveryInfo {
+  sport: SportId;
+  startedAt: number;
+  lastActivity: number;
+  distanceMeters: number;
 }
 
 export interface AppState {
@@ -42,9 +56,16 @@ export interface AppState {
 
   analyseGranularity: GranularityId | 'auto';
 
+  recovery: RecoveryInfo | null;
+
+  /** Copie vers le dossier de synchronisation. */
+  sync: { phase: 'idle' | 'syncing' | 'error'; error: string | null; copied: number; imported?: number };
+
   update: {
     phase: UpdatePhase;
     version: string | null;
+    /** APK de la release trouvée ; `null` si elle n'en publie pas (lien vers GitHub à la place). */
+    assetUrl?: string | null;
     error: string | null;
     progressPct: number;
   };

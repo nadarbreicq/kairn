@@ -18,6 +18,9 @@ import { ExpoSessionStore } from './src/services/sessionStore.expo';
 import { ExpoSettingsStore } from './src/services/settings.expo';
 import { ExpoLocationService } from './src/services/location.expo';
 import { ExpoTransferService } from './src/services/transfer.expo';
+import { recordingJournal } from './src/services/recordingJournal.expo';
+import { ExpoSyncFolder } from './src/services/syncFolder.expo';
+import { ExpoUpdateInstaller } from './src/services/updateInstaller.expo';
 
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -38,6 +41,10 @@ const services: AppServices = {
   settingsStore: new ExpoSettingsStore(),
   createLocationService: () => new ExpoLocationService(),
   transferService: new ExpoTransferService(),
+  // La même instance que celle où la tâche GPS écrit les positions.
+  recordingJournal,
+  syncFolder: new ExpoSyncFolder(),
+  updateInstaller: new ExpoUpdateInstaller(),
   updateRepoSlug: UPDATE_REPO_SLUG,
 };
 
