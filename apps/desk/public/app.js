@@ -28,7 +28,6 @@
     appVersion: document.getElementById('app-version'),
     btnChangeFolder: document.getElementById('btn-change-folder'),
     btnBackup: document.getElementById('btn-backup'),
-    btnCompare: document.getElementById('btn-compare'),
     modalRoot: document.getElementById('modal-root'),
     toastRoot: document.getElementById('toast-root'),
   };
@@ -43,12 +42,13 @@
     const total = Math.round(secPerKm);
     return `${Math.floor(total / 60)}'${String(total % 60).padStart(2, '0')}"`;
   }
+  // Jour et heure dans le fuseau de l'ordinateur, pas l'UTC stocké dans le GPX.
   function fmtDate(ms) {
     if (!ms) return '';
     const d = new Date(ms);
-    const hh = String(d.getUTCHours()).padStart(2, '0');
-    const mm = String(d.getUTCMinutes()).padStart(2, '0');
-    return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} · ${hh}:${mm}`;
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} · ${hh}:${mm}`;
   }
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -353,10 +353,6 @@
 
     el.btnBackup.addEventListener('click', () => {
       window.location.href = Api.backupUrl();
-    });
-
-    el.btnCompare.addEventListener('click', () => {
-      toast('Comparaison de deux sessions côte à côte : à venir.');
     });
   }
 
