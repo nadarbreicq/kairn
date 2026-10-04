@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { formatDuration, formatPace, summarize } from '@kairn/core';
 import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
@@ -9,7 +9,7 @@ import { formatDateShort, formatClock, formatKm, SESSION_NAME_MAX } from '../for
 import { TraceMap } from '../components/TraceMap';
 
 export function SummaryScreen() {
-  const { state, settings, goAnalyse, go, renameSession } = useApp();
+  const { state, settings, goAnalyse, go, renameSession, deleteSession } = useApp();
   const [draftName, setDraftName] = useState<string | null>(null);
   const session = state.sessions.find((s) => s.id === state.selectedSessionId);
 
@@ -90,6 +90,24 @@ export function SummaryScreen() {
         </Text>
         <Button title="Changer la destination →" variant="ghost" onPress={() => go('privacy')} style={{ marginTop: 8, alignSelf: 'flex-start' }} />
       </Card>
+
+      <Button
+        title="Supprimer la séance"
+        variant="ghost"
+        onPress={() =>
+          Alert.alert(
+            'Supprimer cette séance ?',
+            `« ${session.name} » sera effacée de ce téléphone${
+              settings.storageDestination === 'folder' ? ' et du dossier de synchronisation' : ''
+            }. C'est définitif.`,
+            [
+              { text: 'Annuler', style: 'cancel' },
+              { text: 'Supprimer', style: 'destructive', onPress: () => deleteSession(session.id) },
+            ]
+          )
+        }
+        style={{ marginTop: spacing[4], alignSelf: 'center' }}
+      />
     </ScrollView>
   );
 }

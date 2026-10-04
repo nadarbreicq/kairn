@@ -75,6 +75,7 @@ function Harness() {
       <Text testID="updateVersion">{app.state.update.version ?? ''}</Text>
       <Pressable testID="installUpdate" onPress={app.installUpdate} />
       <Text testID="firstSessionName">{app.state.sessions[0]?.name ?? ''}</Text>
+      <Pressable testID="deleteFirst" onPress={() => app.deleteSession(app.state.sessions[0].id)} />
       <Pressable testID="renameBlank" onPress={() => app.renameSession(app.state.sessions[0].id, '   ')} />
       <Pressable testID="renameMessy" onPress={() => app.renameSession(app.state.sessions[0].id, '  Boucle   du  canal ')} />
       <Pressable testID="discardRecovery" onPress={app.discardRecovery} />
@@ -578,6 +579,25 @@ describe('AppProvider — dossier de synchronisation', () => {
     await act(async () => fireEvent.press(getByTestId('pickFolder'))); // nouvelle synchronisation
     expect(getByTestId('sessionCount').props.children).toBe('1');
     expect(syncFolder.files.size).toBe(1);
+  });
+
+  it('supprime une séance de l\'app et du dossier : elle ne revient pas à la synchronisation suivante', async () => {
+    const syncFolder = new InMemorySyncFolder();
+    const services = makeServices({ settingsStore: new InMemorySettingsStore({ onboardingDone: true }), syncFolder });
+    const { getByTestId } = renderHarness(services);
+    await waitReady(getByTestId);
+    await act(async () => fireEvent.press(getByTestId('pickFolder')));
+    await record(getByTestId);
+    expect(syncFolder.files.size).toBe(1);
+
+    await act(async () => fireEvent.press(getByTestId('deleteFirst')));
+    expect(getByTestId('sessionCount').props.children).toBe('0');
+    expect(syncFolder.files.size).toBe(0);
+    expect(getByTestId('screen').props.children).toBe('home');
+
+    await act(async () => fireEvent.press(getByTestId('pickLocal')));
+    await act(async () => fireEvent.press(getByTestId('pickFolder'))); // nouvelle synchronisation
+    expect(getByTestId('sessionCount').props.children).toBe('0');
   });
 
   it('reste sur la base locale si le sélecteur de dossier est annulé', async () => {

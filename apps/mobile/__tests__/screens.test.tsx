@@ -1,5 +1,6 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 import { generateSyntheticSession } from '@kairn/core';
 import { AppProvider, useApp, type AppServices } from '../src/store/AppContext';
@@ -14,6 +15,7 @@ import { OnboardingScreen } from '../src/screens/OnboardingScreen';
 import { HomeScreen } from '../src/screens/HomeScreen';
 import { RecordScreen } from '../src/screens/RecordScreen';
 import { LiveScreen } from '../src/screens/LiveScreen';
+import { SummaryScreen } from '../src/screens/SummaryScreen';
 
 function makeServices(overrides: Partial<AppServices> = {}): AppServices {
   return {
@@ -126,5 +128,31 @@ describe('RecordScreen / LiveScreen', () => {
     // Arrêt du suivi simulé pour ne pas laisser de minuterie active.
     fireEvent.press(stopButton);
     await findByText('DÉMARRER');
+  });
+});
+
+describe('SummaryScreen', () => {
+  function OpenFirst() {
+    const { state, openSession } = useApp();
+    React.useEffect(() => {
+      if (state.ready && state.sessions[0] && !state.selectedSessionId) openSession(state.sessions[0].id);
+    }, [state.ready, state.sessions, state.selectedSessionId, openSession]);
+    return state.selectedSessionId ? <SummaryScreen /> : null;
+  }
+
+  it('supprime la séance après confirmation, et pas avant', async () => {
+    const session = generateSyntheticSession({ id: 's1', name: 'Boucle du canal', sport: 'course', distanceMeters: 3000, avgPaceSecPerKm: 300 });
+    const sessionStore = new InMemorySessionStore([session]);
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    const { findByText } = renderScreen(makeServices({ sessionStore, settingsStore: new InMemorySettingsStore({ onboardingDone: true }) }), <OpenFirst />);
+
+    fireEvent.press(await findByText('Supprimer la séance'));
+    expect(alert).toHaveBeenCalledWith('Supprimer cette séance ?', expect.stringContaining('Boucle du canal'), expect.any(Array));
+    expect(await sessionStore.list()).toHaveLength(1); // rien tant que ce n'est pas confirmé
+
+    const buttons = alert.mock.calls[0][2] as { text: string; onPress?: () => void }[];
+    buttons.find((b) => b.text === 'Supprimer')?.onPress?.();
+    await waitFor(async () => expect(await sessionStore.list()).toHaveLength(0));
+    alert.mockRestore();
   });
 });

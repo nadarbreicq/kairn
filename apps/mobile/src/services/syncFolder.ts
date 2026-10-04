@@ -24,6 +24,8 @@ export interface SyncFolderService {
   writeSession(folder: SyncFolderRef, session: Session): Promise<void>;
   /** Séances GPX présentes dans le dossier (un fichier illisible est ignoré). */
   listSessions(folder: SyncFolderRef): Promise<Session[]>;
+  /** Efface la copie de la séance dans le dossier ; sans effet si elle n'y est pas. */
+  removeSession(folder: SyncFolderRef, session: Session): Promise<void>;
 }
 
 /**
@@ -53,5 +55,9 @@ export class InMemorySyncFolder implements SyncFolderService {
 
   async listSessions(): Promise<Session[]> {
     return [...this.files.values()];
+  }
+
+  async removeSession(_folder: SyncFolderRef, session: Session): Promise<void> {
+    this.files.delete(syncFileName(session));
   }
 }

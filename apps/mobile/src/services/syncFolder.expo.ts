@@ -36,6 +36,12 @@ export class ExpoSyncFolder implements SyncFolderService {
     await SAF.writeAsStringAsync(target, writeGpx(session));
   }
 
+  async removeSession(folder: SyncFolderRef, session: Session): Promise<void> {
+    const name = syncFileName(session);
+    const existing = (await SAF.readDirectoryAsync(folder.uri)).find((uri) => decodeURIComponent(uri).endsWith(`/${name}`));
+    if (existing) await SAF.deleteAsync(existing);
+  }
+
   async listSessions(folder: SyncFolderRef): Promise<Session[]> {
     const sessions: Session[] = [];
     for (const uri of await SAF.readDirectoryAsync(folder.uri)) {

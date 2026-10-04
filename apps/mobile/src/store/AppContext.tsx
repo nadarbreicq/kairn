@@ -79,6 +79,8 @@ interface AppContextValue {
   startRecording: () => Promise<void>;
   toggleRunning: () => void;
   stopRecording: () => Promise<void>;
+  /** Supprime définitivement une séance, copie du dossier de synchronisation comprise. */
+  deleteSession: (id: string) => Promise<void>;
   /** Renomme une séance ; un nom vide est refusé (`false`), l'ancien est conservé. */
   renameSession: (id: string, name: string) => Promise<boolean>;
   resumeRecovery: () => Promise<void>;
@@ -406,6 +408,28 @@ export function AppProvider({ services, children }: { services: AppServices; chi
     [services, state.sessions, refreshSessions, mirrorSession]
   );
 
+  const deleteSession = useCallback(
+    async (id: string) => {
+      const session = state.sessions.find((s) => s.id === id);
+      if (!session) return;
+      await services.sessionStore.remove(id);
+      // La copie du dossier doit partir aussi : sinon la prochaine
+      // synchronisation réimporterait la séance depuis le dossier.
+      if (settings.storageDestination === 'folder' && settings.syncFolder) {
+        try {
+          await services.syncFolder.removeSession(settings.syncFolder, session);
+        } catch (err) {
+          patch((s) => ({
+            sync: { ...s.sync, phase: 'error', error: `Copie du dossier non effacée (elle sera réimportée) : ${(err as Error).message}` },
+          }));
+        }
+      }
+      await refreshSessions();
+      patch((s) => ({ selectedSessionId: null, screen: s.prevScreen === 'history' ? 'history' : 'home', prevScreen: 'home' }));
+    },
+    [services, state.sessions, settings.storageDestination, settings.syncFolder, refreshSessions, patch]
+  );
+
   /** Séance interrompue trouvée au lancement : l'enregistrer telle quelle. */
   const saveRecovery = useCallback(async () => {
     const content = await services.recordingJournal.load();
@@ -561,6 +585,7 @@ export function AppProvider({ services, children }: { services: AppServices; chi
       startRecording,
       toggleRunning,
       stopRecording,
+      deleteSession,
       renameSession,
       resumeRecovery,
       saveRecovery,
@@ -597,6 +622,7 @@ export function AppProvider({ services, children }: { services: AppServices; chi
       startRecording,
       toggleRunning,
       stopRecording,
+      deleteSession,
       renameSession,
       resumeRecovery,
       saveRecovery,
