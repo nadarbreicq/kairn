@@ -15,6 +15,7 @@
     "platforms": ["android", "web"],
     "android": {
       "package": "app.kairn.mobile",
+      "versionCode": 904,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-icon-monochrome.png",
@@ -28,6 +29,7 @@
       ]
     },
     "plugins": [
+      "./plugins/withReleaseSigning",
       "@maplibre/maplibre-react-native",
       [
         "expo-location",
