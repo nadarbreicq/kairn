@@ -4,24 +4,19 @@ Un cairn est un tas de pierres posé sur un chemin pour indiquer la voie. Person
 
 **Kairn** est une application de suivi sportif (course, vélo, randonnée, trail, marche) qui garde vos séances sur votre téléphone : pas de compte à créer, pas de télémétrie, pas de serveur qui reçoit vos données. **Kairn Desk** est le complément sur ordinateur : un programme qui affiche vos séances en grand écran, sans compte non plus — il lit simplement le dossier où votre téléphone les a écrites.
 
-Le projet est encore jeune : il n'y a pas encore de version toute prête à installer en un clic depuis le Play Store. Les étapes ci-dessous montrent comment l'installer et l'utiliser dès maintenant.
+Kairn n'est pas sur le Play Store : il s'installe à partir d'un fichier `.apk`, l'équivalent d'un fichier d'installation, publié avec chaque version du projet.
 
 ## Installer Kairn sur votre téléphone Android
 
-Il faut, une seule fois, un ordinateur avec [Node.js](https://nodejs.org) installé (prenez la version « LTS ») pour préparer l'application — ensuite elle vit sur votre téléphone.
+**Étape 1 :** sur le téléphone, ouvrez la page des versions du projet ([Releases](https://github.com/nadarbreicq/kairn/releases)) et téléchargez le fichier `kairn-….apk` de la dernière version.
 
-**Étape 1 — sur le téléphone :** installez l'application gratuite **Expo Go**, disponible sur le Play Store.
+**Étape 2 :** ouvrez le fichier téléchargé. Android demande la première fois d'autoriser « l'installation d'applications inconnues » pour votre navigateur — c'est normal, c'est le prix de ne pas passer par un magasin d'applications.
 
-**Étape 2 — sur l'ordinateur :** ouvrez un terminal dans le dossier du projet et lancez :
+**Étape 3 :** ouvrez Kairn. Les versions suivantes se proposent d'elles-mêmes dans l'app (Réglages → Mises à jour) : elles s'installent par-dessus, sans perdre vos séances. Android vérifie que chaque mise à jour est signée par le projet, et refuse tout fichier d'une autre provenance.
 
-```bash
-npm install
-npm run mobile:start
-```
+Vous préférez fabriquer l'APK vous-même, ou aucune version n'est encore publiée ? Voir [Obtenir un fichier installable (APK)](#obtenir-un-fichier-installable-apk) plus bas.
 
-**Étape 3 :** un QR code s'affiche dans le terminal. Ouvrez Expo Go sur le téléphone et scannez-le (le téléphone et l'ordinateur doivent être sur le même réseau Wi-Fi). Kairn s'ouvre directement sur le téléphone.
-
-C'est le moyen le plus rapide pour essayer l'application, avec une limite : dans Expo Go, l'enregistrement s'arrête quand l'écran se verrouille (l'app le signale pendant la séance). Pour une vraie sortie — et une installation autonome, un vrai fichier à garder sur le téléphone, qui ne dépend plus de l'ordinateur ensuite — voir [Obtenir un fichier installable (APK)](#obtenir-un-fichier-installable-apk) plus bas.
+**Aperçu rapide, sans GPS :** avec l'application Expo Go et `npm run mobile:start` sur un ordinateur, on peut parcourir l'interface en scannant le QR code affiché. L'enregistrement d'une trace, lui, demande l'application installée : il passe par un module GPS propre à Kairn, qu'Expo Go ne contient pas.
 
 Une fois lancée, l'app propose un petit parcours de bienvenue puis l'écran d'accueil : un bouton central pour démarrer un enregistrement, l'historique de vos sorties, et les réglages où choisir où vos séances sont rangées.
 
@@ -82,7 +77,7 @@ kairn/
 
 **Le fichier GPX est la base de données.** Le mobile écrit un fichier `.gpx` par séance dans un dossier local ; ce même dossier, une fois synchronisé, est celui que Kairn Desk surveille. Les deux utilisent `packages/core` pour tout calcul — distance, allure, dénivelé, segments, tendances — donc aucune divergence possible entre ce qu'affiche le téléphone et ce qu'affiche l'ordinateur : c'est la règle que `CLAUDE.md` impose pour les tests (« le mobile et le poste de travail doivent produire les mêmes valeurs sur les traces de test »), garantie ici par construction plutôt que vérifiée après coup.
 
-Aucune dépendance propriétaire : Expo, Express et le reste des paquets utilisés sont open source (MIT/Apache/BSD).
+Aucune dépendance propriétaire : Expo, Express, MapLibre et le reste des paquets utilisés sont open source (MIT/Apache/BSD). Le suivi GPS passe par un petit module natif propre au projet (`apps/mobile/modules/kairn-location`), qui lit le GPS du système Android sans Google Play Services — l'APK n'en contient aucune classe.
 
 ### Installer et tester le dépôt
 
