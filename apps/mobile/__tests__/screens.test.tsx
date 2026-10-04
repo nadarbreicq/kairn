@@ -106,6 +106,15 @@ describe('RecordScreen / LiveScreen', () => {
     expect((await findByTestId('foregroundOnly')).props.children).toMatch(/gardez l'écran allumé/);
   });
 
+  it('indique la recherche du signal GPS tant qu\'aucun point n\'est arrivé', async () => {
+    const silent = new SimulatedLocationService({ intervalMs: 1000, seed: 1 });
+    jest.spyOn(silent, 'start').mockResolvedValue({ background: true }); // GPS muet : pas encore de signal
+    const { findByText, findByTestId } = renderScreen(makeServices({ createLocationService: () => silent }), <RecordFlow />);
+    fireEvent.press(await findByText('DÉMARRER'));
+
+    expect((await findByTestId('gpsSearching')).props.children).toMatch(/Recherche du signal GPS/);
+  });
+
   it("n'affiche pas l'avertissement quand le suivi continue écran verrouillé", async () => {
     const services = makeServices();
     const { findByText, queryByTestId } = renderScreen(services, <RecordFlow />);
@@ -113,6 +122,7 @@ describe('RecordScreen / LiveScreen', () => {
 
     const stopButton = await findByText('Terminer');
     expect(queryByTestId('foregroundOnly')).toBeNull();
+    expect(queryByTestId('gpsSearching')).toBeNull(); // le GPS simulé livre un point dès le départ
     // Arrêt du suivi simulé pour ne pas laisser de minuterie active.
     fireEvent.press(stopButton);
     await findByText('DÉMARRER');

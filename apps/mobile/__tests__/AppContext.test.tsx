@@ -316,6 +316,9 @@ describe('AppProvider — enregistrement', () => {
 
     expect(getByTestId('sessionCount').props.children).toBe('0');
     expect(await services.sessionStore.list()).toHaveLength(0);
+    // Pas de résumé introuvable : retour à la préparation, avec la raison.
+    expect(getByTestId('screen').props.children).toBe('record');
+    expect(getByTestId('liveError').props.children).toMatch(/pas été sauvegardée/);
   });
 });
 

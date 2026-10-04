@@ -383,7 +383,12 @@ export function AppProvider({ services, children }: { services: AppServices; chi
     await services.recordingJournal.clear();
     recordingMeta.current = null;
     lastUsableSample.current = null;
-    patch({ screen: 'summary', prevScreen: 'live', live: IDLE_LIVE, ...(id ? { selectedSessionId: id } : {}) });
+    patch(
+      id
+        ? { screen: 'summary', prevScreen: 'live', live: IDLE_LIVE, selectedSessionId: id }
+        : // Rien à résumer : retour à la préparation, en disant pourquoi.
+          { screen: 'record', prevScreen: 'home', live: { ...IDLE_LIVE, error: "Aucune position enregistrée : la séance n'a pas été sauvegardée." } }
+    );
   }, [locationService, state.live.points, state.live.startedAt, state.recordSport, settings.masks.maskStartEnd, services, patch, saveRecordedSession]);
 
   const renameSession = useCallback(

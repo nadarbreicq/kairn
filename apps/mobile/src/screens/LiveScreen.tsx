@@ -10,6 +10,9 @@ import { TraceMap } from '../components/TraceMap';
 
 type LiveView = 'numbers' | 'map';
 
+/** Au-delà, on suggère que le téléphone est à l'intérieur (pas de satellites en vue). */
+const GPS_SLOW_FIX_MS = 60_000;
+
 export function LiveScreen() {
   const { state, settings, toggleRunning, stopRecording } = useApp();
   const [view, setView] = useState<LiveView>('numbers');
@@ -41,6 +44,13 @@ export function LiveScreen() {
         <Text style={styles.recMeta}>{points.length} points</Text>
       </View>
 
+      {points.length === 0 && !paused && (
+        <Text testID="gpsSearching" style={styles.notice}>
+          {startedAt && now - startedAt > GPS_SLOW_FIX_MS
+            ? "Toujours aucun signal GPS. À l'intérieur, la puce GPS ne voit pas les satellites : sortez à découvert, l'enregistrement démarrera au premier point."
+            : 'Recherche du signal GPS… À découvert, le premier point arrive en général en moins d’une minute.'}
+        </Text>
+      )}
       {resumed && (
         <Text testID="resumedNotice" style={styles.notice}>
           Séance reprise : l'app avait été fermée pendant l'enregistrement. La trace enregistrée jusque-là est conservée.
