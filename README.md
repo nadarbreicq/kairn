@@ -21,7 +21,7 @@ npm run mobile:start
 
 **Étape 3 :** un QR code s'affiche dans le terminal. Ouvrez Expo Go sur le téléphone et scannez-le (le téléphone et l'ordinateur doivent être sur le même réseau Wi-Fi). Kairn s'ouvre directement sur le téléphone.
 
-C'est le moyen le plus rapide pour essayer l'application. Pour une installation autonome — un vrai fichier à garder sur le téléphone, qui ne dépend plus de l'ordinateur ensuite — voir [Obtenir un fichier installable (APK)](#obtenir-un-fichier-installable-apk) plus bas.
+C'est le moyen le plus rapide pour essayer l'application, avec une limite : dans Expo Go, l'enregistrement s'arrête quand l'écran se verrouille (l'app le signale pendant la séance). Pour une vraie sortie — et une installation autonome, un vrai fichier à garder sur le téléphone, qui ne dépend plus de l'ordinateur ensuite — voir [Obtenir un fichier installable (APK)](#obtenir-un-fichier-installable-apk) plus bas.
 
 Une fois lancée, l'app propose un petit parcours de bienvenue puis l'écran d'accueil : un bouton central pour démarrer un enregistrement, l'historique de vos sorties, et les réglages où choisir où vos séances sont rangées.
 
@@ -42,24 +42,29 @@ Rien de tout ça n'est envoyé sur Internet : le programme tourne uniquement sur
 
 Pour installer Kairn sur un téléphone sans repasser par l'ordinateur à chaque fois, il faut un fichier `.apk` — l'équivalent d'un fichier d'installation. Deux façons de l'obtenir :
 
-- **Depuis GitHub, sans rien installer** : chaque envoi sur `main` déclenche automatiquement `.github/workflows/ci.yml`, qui compile l'APK debug. Une fois le dépôt en ligne : onglet **Actions** du dépôt → dernière exécution de *CI* → artefact `kairn-debug-apk` à télécharger (disponible seulement une fois l'exécution terminée, quelques minutes).
-- **En le fabriquant vous-même**, avec en plus [Android Studio](https://developer.android.com/studio) (pour les outils Android) et un JDK 17 (par exemple [Temurin](https://adoptium.net)) installés sur l'ordinateur :
+- **Depuis GitHub, sans rien installer** : chaque envoi sur `main` déclenche automatiquement `.github/workflows/ci.yml`, qui compile l'APK. Onglet **Actions** du dépôt → dernière exécution de *CI* → artefact `kairn-apk` à télécharger (disponible seulement une fois l'exécution terminée, une dizaine de minutes ; GitHub le livre dans un `.zip` qui contient l'APK).
+- **En le fabriquant vous-même**, avec en plus un JDK 17 (par exemple [Temurin](https://adoptium.net)) et le SDK Android (via [Android Studio](https://developer.android.com/studio), ou ses seuls outils en ligne de commande) installés sur l'ordinateur, et la variable `ANDROID_HOME` pointant vers le SDK :
 
   ```bash
-  cd apps/mobile
-  npx expo prebuild --platform android
-  cd android
-  ./gradlew assembleDebug
+  npm run mobile:apk
   ```
 
-  Le fichier apparaît dans `apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk`.
+  La première compilation prend plusieurs minutes. Le fichier apparaît dans `apps/mobile/android/app/build/outputs/apk/release/app-release.apk`. Dans VS Code, la tâche « Mobile : construire l'APK installable » fait la même chose.
 
-Une fois le fichier obtenu, transférez-le sur le téléphone (câble USB, ou toute autre méthode habituelle) puis ouvrez-le depuis le gestionnaire de fichiers du téléphone. Android demande la première fois d'autoriser « l'installation d'applications inconnues » pour cette source — c'est normal, c'est le prix de ne pas passer par un magasin d'applications.
+Cet APK embarque tout le code de l'application et fonctionne seul sur le téléphone. Il est signé avec une clé de développement : il s'installe à la main, mais n'est pas destiné à un magasin d'applications.
+
+**Par câble USB** : activez le *débogage USB* sur le téléphone (Paramètres → À propos du téléphone → appuyer sept fois sur *Numéro de build*, puis Paramètres → Options pour les développeurs → *Débogage USB*), branchez-le, acceptez la demande d'autorisation qui s'affiche, puis :
+
+```bash
+npm run mobile:apk:install
+```
+
+**Sans débogage USB** : transférez le fichier sur le téléphone comme n'importe quel autre fichier, puis ouvrez-le depuis le gestionnaire de fichiers du téléphone. Android demande la première fois d'autoriser « l'installation d'applications inconnues » pour cette source — c'est normal, c'est le prix de ne pas passer par un magasin d'applications.
 
 ## Ce que Kairn garantit
 
 - **Rien ne quitte l'appareil sans un geste explicite.** Les séances sont écrites en local ; les envoyer ailleurs (export, Drive une fois activé) est toujours une action volontaire.
-- **Le GPS fonctionne hors ligne.** Les cartes de la zone sont mises en cache avant la sortie ; pendant l'effort, aucune connexion n'est ouverte.
+- **Le GPS fonctionne hors ligne.** L'enregistrement n'ouvre aucune connexion. Le fond de carte (tuiles OpenStreetMap servies par OpenFreeMap) est la seule exception visible : une zone affichée pour la première fois est téléchargée si le réseau est là, puis gardée sur le téléphone pour les fois suivantes. Il se désactive dans les réglages — plus aucune requête, la trace reste dessinée seule.
 - **Aucune donnée de test réelle dans le code source** : les traces utilisées pour vérifier que l'application fonctionne sont générées, pas issues d'une vraie sortie de quelqu'un.
 
 ## Pour les personnes qui développent
@@ -93,15 +98,15 @@ Dans VS Code, ouvrir le dossier `kairn` directement : `.vscode/tasks.json` et `l
 
 ### Ce qui est implémenté
 
-- **Module d'analyse (`packages/core`)** : lecture/écriture GPX 1.1 (avec import tolérant d'un GPX externe sans l'extension Kairn), export GeoJSON/CSV, distance (haversine), dénivelé (détection d'extrema à hystérésis — robuste aux montées longues et lentes comme au bruit GPS), découpage en segments à pas adaptatif (100 m / 200 m / 500 m / 1 km selon la distance, ou forcé), zones de vitesse, agrégats hebdomadaires (semaines ISO 8601), tendance de volume, progression par sport, records personnels (meilleur effort par distance, dénivelé max, plus longue sortie), anonymisation départ/arrivée. Entièrement testé (49 tests).
+- **Module d'analyse (`packages/core`)** : lecture/écriture GPX 1.1 (avec import tolérant d'un GPX externe sans l'extension Kairn), export GeoJSON/CSV, distance (haversine), filtrage du bruit GPS à l'enregistrement (positions trop imprécises écartées, et un point n'est ajouté que pour un déplacement supérieur à l'incertitude de la mesure : téléphone immobile, la dérive ne dessine plus de gribouillis ni de distance fictive), dénivelé (détection d'extrema à hystérésis — robuste aux montées longues et lentes comme au bruit GPS), découpage en segments à pas adaptatif (100 m / 200 m / 500 m / 1 km selon la distance, ou forcé), zones de vitesse, agrégats hebdomadaires (semaines ISO 8601), tendance de volume, progression par sport, records personnels (meilleur effort par distance, dénivelé max, plus longue sortie), anonymisation départ/arrivée. Entièrement testé (60 tests).
 - **Kairn Desk** : liste des sessions groupées par semaine, détail d'une session (trace réelle projetée en SVG, allure par segment, altitude, zones de vitesse), changement de pas d'analyse, correction (masquage définitif + réécriture du fichier — c'est ce qui « renvoie » la correction vers le téléphone au prochain passage de la synchronisation), export GPX/GeoJSON/CSV, archive de sauvegarde (zip), changement de dossier surveillé à chaud. Interface en HTML/CSS/JS simple, sans framework ni étape de build.
-- **Mobile** : les huit écrans du prototype (onboarding, accueil, préparation, enregistrement en direct avec position simulée pour développer sans GPS, résumé, analyse, historique en trois vues, export/import, réglages), navigation par état (comme le prototype), stockage GPX réel sur l'appareil, vérification de nouvelle version auprès de l'API publique des releases GitHub.
+- **Mobile** : les huit écrans du prototype (onboarding, accueil, préparation, fond de carte OpenStreetMap sous la trace (MapLibre Native, tuiles vectorielles OpenFreeMap sans clé ni compte, cache de 200 Mo sur le téléphone, désactivable), enregistrement en direct qui continue écran verrouillé (service Android au premier plan, notification permanente, permission de position « pendant l'utilisation » seulement — jamais « tout le temps »), avec une position simulée pour développer sans GPS, résumé, analyse, historique en trois vues, export/import, réglages), navigation par état (comme le prototype), stockage GPX réel sur l'appareil, vérification de nouvelle version auprès de l'API publique des releases GitHub.
 
 ### Ce qui est délibérément hors de cette version
 
 Le prototype liste ces pistes comme des décisions à trancher plus tard ; elles sont laissées en évidence dans l'interface (comme Google Drive, déjà marqué « Fermé ») plutôt qu'implémentées à moitié :
 
-- **Fond de carte et relief 3D** : la trace GPS réelle est dessinée (projection équirectangulaire), mais sans tuiles OpenStreetMap ni modèle d'élévation — ça reste à décider (tuiles embarquées ? service à la demande ?).
+- **Relief 3D et préchargement de zone** : le fond de carte est en place sur le mobile (MapLibre, tuiles OpenFreeMap gardées en cache), pas encore dans Kairn Desk ; le relief (modèle d'élévation ouvert) et le téléchargement d'une zone entière avant la sortie restent à faire.
 - **Google Drive, chiffrement par phrase de passe, capteurs BLE, mode fantôme, segments personnels** : façades présentes, non actives.
 - **Import FIT/TCX** : seul le GPX est lu pour l'instant.
 - **Signature APK** : la vérification de mise à jour compare les versions et pourra vérifier une somme de contrôle ; la vérification de signature Android proprement dite reste à ajouter.
