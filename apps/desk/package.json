@@ -19,7 +19,8 @@
     "@kairn/core": "^0.1.0",
     "archiver": "^7.0.1",
     "chokidar": "^3.6.0",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "maplibre-gl": "^5.24.0"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.2",

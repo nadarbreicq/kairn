@@ -14,6 +14,10 @@ const Api = (() => {
   }
 
   return {
+    /** Style du fond de carte (MapLibre), le même que sur le téléphone. */
+    mapStyle() {
+      return request('/api/map-style');
+    },
     status: () => request('/api/status'),
     sessions: (params = {}) => {
       const qs = new URLSearchParams(params).toString();

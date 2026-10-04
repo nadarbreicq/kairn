@@ -37,6 +37,20 @@ describe('API Kairn Desk', () => {
     await request(app).get('/api/sessions?q=inconnu').expect(200).then((r) => expect(r.body).toHaveLength(0));
   });
 
+  it('GET /api/map-style renvoie le style Kairn Nocturne, le même que sur le téléphone', async () => {
+    const { app } = await withRepo();
+    const res = await request(app).get('/api/map-style').expect(200);
+    expect(res.body.version).toBe(8);
+    expect(res.body.name).toBe('Kairn Nocturne');
+    expect(res.body.sources.openmaptiles.attribution).toMatch(/OpenStreetMap/);
+  });
+
+  it('sert MapLibre GL JS depuis les dépendances, sans CDN', async () => {
+    const { app } = await withRepo();
+    await request(app).get('/vendor/maplibre-gl/maplibre-gl.js').expect(200).expect('Content-Type', /javascript/);
+    await request(app).get('/vendor/maplibre-gl/maplibre-gl.css').expect(200).expect('Content-Type', /css/);
+  });
+
   it('GET /api/sessions/:id 404 sur un identifiant inconnu', async () => {
     const { app } = await withRepo();
     await request(app).get('/api/sessions/n-existe-pas').expect(404);

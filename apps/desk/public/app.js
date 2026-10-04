@@ -50,6 +50,65 @@
     const mm = String(d.getMinutes()).padStart(2, '0');
     return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} · ${hh}:${mm}`;
   }
+  // --- Fond de carte -------------------------------------------------------
+  // MapLibre GL JS et le style Kairn Nocturne, comme sur le téléphone. Le
+  // choix d'afficher le fond (donc de laisser le navigateur télécharger des
+  // tuiles) est retenu dans ce navigateur seulement.
+  const MAP_PREF_KEY = 'kairn.fondDeCarte';
+  let mapStyle = null;
+  let currentMap = null;
+
+  function mapEnabled() {
+    try {
+      return localStorage.getItem(MAP_PREF_KEY) !== 'non';
+    } catch {
+      return true;
+    }
+  }
+
+  function setMapEnabled(on) {
+    try {
+      localStorage.setItem(MAP_PREF_KEY, on ? 'oui' : 'non');
+    } catch {
+      // Stockage indisponible : le choix vaut pour cette page seulement.
+    }
+  }
+
+  async function mountTraceMap(trace) {
+    if (currentMap) {
+      currentMap.remove();
+      currentMap = null;
+    }
+    const container = el.detailPane.querySelector('#trace-map');
+    if (!container) return;
+    container.classList.remove('ready');
+    if (!window.maplibregl || !mapEnabled() || trace.length < 2) return;
+    try {
+      mapStyle = mapStyle || (await Api.mapStyle());
+    } catch {
+      return; // la trace SVG reste affichée
+    }
+    const coords = trace.map((p) => [p.lon, p.lat]);
+    const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]));
+    const map = new maplibregl.Map({
+      container,
+      style: mapStyle,
+      bounds,
+      fitBoundsOptions: { padding: 28, maxZoom: 17 },
+      attributionControl: { compact: true },
+      dragRotate: false,
+      pitchWithRotate: false,
+    });
+    currentMap = map;
+    map.on('load', () => {
+      map.addSource('kairn-trace', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } } });
+      const layout = { 'line-cap': 'round', 'line-join': 'round' };
+      map.addLayer({ id: 'kairn-trace-casing', type: 'line', source: 'kairn-trace', layout, paint: { 'line-color': '#161826', 'line-width': 7 } });
+      map.addLayer({ id: 'kairn-trace-line', type: 'line', source: 'kairn-trace', layout, paint: { 'line-color': '#9184d9', 'line-width': 4 } });
+      container.classList.add('ready');
+    });
+  }
+
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
@@ -244,7 +303,8 @@
       <div class="stat-row">
         <div class="trace-panel">
           ${traceSvg(detail.trace, { width: 560, height: 260 })}
-          <div class="trace-caption">Trace réelle, projection locale · pas de fond de carte pour l'instant</div>
+          <div class="trace-map" id="trace-map"></div>
+          <label class="trace-caption"><input type="checkbox" id="map-toggle" ${mapEnabled() ? 'checked' : ''}> Fond de carte OpenStreetMap</label>
         </div>
         <div class="stat-tiles">
           ${statTile('Distance', fmtKm(s.distanceMeters), 'km')}
@@ -279,6 +339,12 @@
         ${zones}
       </div>
     `;
+
+    mountTraceMap(detail.trace);
+    el.detailPane.querySelector('#map-toggle').addEventListener('change', (e) => {
+      setMapEnabled(e.target.checked);
+      mountTraceMap(detail.trace);
+    });
 
     el.detailPane.querySelectorAll('[data-gran]').forEach((btn) => {
       btn.addEventListener('click', async () => {

@@ -153,7 +153,13 @@ a { color: inherit; text-decoration: none; }
 .stat-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
 .trace-panel { flex: 1; min-width: 280px; position: relative; height: 260px; border-radius: 8px; overflow: hidden; background: linear-gradient(165deg,#1c1f30,#141623); }
 .trace-panel svg { position: relative; display: block; }
-.trace-caption { position: absolute; left: 12px; bottom: 9px; font-size: 10px; color: color-mix(in srgb, var(--color-text) 40%, transparent); }
+.trace-caption { position: absolute; left: 10px; top: 9px; z-index: 2; background: rgba(22,24,38,.7); padding: 3px 8px; border-radius: 4px; font-size: 10px; color: color-mix(in srgb, var(--color-text) 55%, transparent); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.trace-caption input { accent-color: var(--color-accent); margin: 0; }
+/* Le fond de carte recouvre la trace SVG une fois prêt ; sinon (hors ligne, désactivé) la trace SVG reste visible. */
+.trace-map { position: absolute; inset: 0; opacity: 0; transition: opacity .25s; }
+.trace-map.ready { opacity: 1; }
+.trace-map .maplibregl-ctrl-attrib { background: rgba(22,24,38,.7); color: color-mix(in srgb, var(--color-text) 60%, transparent); font-size: 10px; }
+.trace-map .maplibregl-ctrl-attrib a { color: inherit; }
 .stat-tiles { width: 196px; flex: none; display: flex; flex-direction: column; gap: 8px; }
 .stat-tile { padding: 11px; border-radius: 8px; background: var(--color-surface); }
 .stat-tile .kicker { margin-bottom: 2px; }

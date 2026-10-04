@@ -1,7 +1,10 @@
 /**
  * Kairn Desk — serveur local. Sert l'interface sur `localhost` et lit le
- * dossier de sessions désigné par la configuration. Aucune requête sortante,
- * aucun compte : fermer la fenêtre du terminal arrête le service.
+ * dossier de sessions désigné par la configuration. Le serveur n'émet
+ * aucune requête sortante et ne demande aucun compte ; seul le fond de
+ * carte, s'il est affiché, est téléchargé par le navigateur (tuiles
+ * OpenStreetMap servies par OpenFreeMap). Fermer la fenêtre du terminal
+ * arrête le service.
  */
 import express, { type Express } from 'express';
 import path from 'node:path';
@@ -12,6 +15,10 @@ import { trendRouter } from './routes/trend';
 import { statusRouter } from './routes/status';
 import { backupRouter } from './routes/backup';
 import { configRouter } from './routes/config';
+import { mapRouter } from './routes/map';
+
+/** MapLibre GL JS servi depuis les dépendances : ni CDN, ni étape de compilation. */
+const MAPLIBRE_DIST = path.dirname(require.resolve('maplibre-gl/dist/maplibre-gl.js'));
 
 export function createApp(repo: SessionRepository): Express {
   const app = express();
@@ -21,6 +28,8 @@ export function createApp(repo: SessionRepository): Express {
   app.use('/api', statusRouter(repo));
   app.use('/api', backupRouter(repo));
   app.use('/api', configRouter(repo));
+  app.use('/api', mapRouter());
+  app.use('/vendor/maplibre-gl', express.static(MAPLIBRE_DIST));
   app.use(express.static(path.join(__dirname, '..', 'public')));
   return app;
 }
