@@ -6,6 +6,7 @@
  */
 export * from './types';
 export * from './geo';
+export * from './filter';
 export * from './gpx';
 export * from './formats';
 export * from './analysis';
