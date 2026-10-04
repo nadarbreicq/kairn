@@ -6,6 +6,10 @@ Un cairn est un tas de pierres posé sur un chemin pour indiquer la voie. Person
 
 Kairn n'est pas sur le Play Store : il s'installe à partir d'un fichier `.apk`, l'équivalent d'un fichier d'installation, publié avec chaque version du projet.
 
+![Kairn sur Android : accueil, enregistrement en cours, analyse d'une séance, progression](docs/captures/apercu-mobile.png)
+
+Tous les écrans, de l'app comme de Kairn Desk, sont présentés dans [Kairn en images](docs/captures.md).
+
 ## Installer Kairn sur votre téléphone Android
 
 **Étape 1 :** sur le téléphone, ouvrez la page des versions du projet ([Releases](https://github.com/nadarbreicq/kairn/releases)) et téléchargez le fichier `kairn-….apk` de la dernière version.
@@ -22,7 +26,11 @@ Une fois lancée, l'app propose un petit parcours de bienvenue puis l'écran d'a
 
 ## Utiliser Kairn Desk sur votre ordinateur
 
-Kairn Desk affiche vos séances en grand : carte, allure par segment, dénivelé. Toujours avec [Node.js](https://nodejs.org) installé, depuis le dossier du projet :
+Kairn Desk affiche vos séances en grand : carte, allure par segment, dénivelé.
+
+![Kairn Desk : liste des séances par semaine et détail d'un trail](docs/captures/apercu-desk.png)
+
+Toujours avec [Node.js](https://nodejs.org) installé, depuis le dossier du projet :
 
 ```bash
 npm install
@@ -30,6 +38,8 @@ npm run desk:dev
 ```
 
 Un message indique que Kairn Desk est prêt : ouvrez **<http://localhost:7333>** dans votre navigateur. Un dossier `Kairn/sessions` est créé dans votre dossier personnel — c'est là que Kairn Desk regarde. Pour l'alimenter, transférez-y les fichiers `.gpx` exportés depuis l'app mobile (onglet Export/Import), ou pointez-le vers le dossier où votre téléphone les synchronise déjà (câble USB, Drive, WebDAV) avec le bouton « Changer de dossier » dans l'interface.
+
+Pas encore de séance, ou envie d'essayer avant d'enregistrer ? `npm run demo:sessions -- ~/Kairn/sessions` y dépose six mois de séances de démonstration — des traces synthétiques, calculées, qui ne viennent d'aucune vraie sortie.
 
 Rien de tout ça n'est envoyé sur Internet : le programme tourne uniquement sur votre ordinateur, et fermer le terminal l'arrête.
 
@@ -89,19 +99,33 @@ npm run lint     # oxlint sur tout le dépôt
 
 Dans VS Code, ouvrir le dossier `kairn` directement : `.vscode/tasks.json` et `launch.json` exposent les mêmes commandes via `Terminal → Exécuter la tâche…` et le débogueur.
 
-Émulateur Android plutôt qu'un téléphone : installer [Android Studio](https://developer.android.com/studio), créer un appareil virtuel (AVD), le démarrer, puis `npm run android --workspace apps/mobile`. Aperçu rapide dans un navigateur (sans stockage réel — le web n'est pas une cible du produit) : `npm run web --workspace apps/mobile`.
+Émulateur Android plutôt qu'un téléphone : installer [Android Studio](https://developer.android.com/studio), créer un appareil virtuel (AVD), le démarrer, puis `npm run android --workspace apps/mobile`.
+
+Sans Android Studio (Linux, sans droits administrateur) : un JDK 17 — Gradle et React Native 0.74 refusent les JDK trop récents —, puis les [outils en ligne de commande](https://developer.android.com/studio#command-line-tools-only) décompressés dans `~/Android/Sdk/cmdline-tools/latest`, et :
+
+```bash
+export JAVA_HOME=/chemin/vers/jdk-17 ANDROID_HOME="$HOME/Android/Sdk"
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+yes | sdkmanager --licenses
+sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" "ndk;26.1.10909125"
+# pour un émulateur (KVM nécessaire) :
+sdkmanager "emulator" "system-images;android-34;default;x86_64"
+avdmanager create avd -n kairn -k "system-images;android-34;default;x86_64" -d pixel_7
+```
+
+Un APK pour l'émulateur se construit avec `KAIRN_ABIS=x86_64 npm run mobile:apk` (par défaut, seules les architectures des téléphones sont embarquées). Pour essayer l'app avec des séances déjà remplies, ou refaire les captures d'écran, voir la fin de [Kairn en images](docs/captures.md#refaire-les-captures). Aperçu rapide dans un navigateur (sans stockage réel — le web n'est pas une cible du produit) : `npm run web --workspace apps/mobile`.
 
 ### Ce qui est implémenté
 
 - **Module d'analyse (`packages/core`)** : lecture/écriture GPX 1.1 (avec import tolérant d'un GPX externe sans l'extension Kairn), export GeoJSON/CSV, distance (haversine), filtrage du bruit GPS à l'enregistrement (positions trop imprécises écartées, et un point n'est ajouté que pour un déplacement supérieur à l'incertitude de la mesure : téléphone immobile, la dérive ne dessine plus de gribouillis ni de distance fictive), dénivelé (détection d'extrema à hystérésis — robuste aux montées longues et lentes comme au bruit GPS), découpage en segments à pas adaptatif (100 m / 200 m / 500 m / 1 km selon la distance, ou forcé), zones de vitesse, agrégats hebdomadaires (semaines ISO 8601), tendance de volume, progression par sport, records personnels (meilleur effort par distance, dénivelé max, plus longue sortie), anonymisation départ/arrivée. Entièrement testé (60 tests).
-- **Kairn Desk** : liste des sessions groupées par semaine, détail d'une session (trace réelle projetée en SVG, allure par segment, altitude, zones de vitesse), changement de pas d'analyse, correction (masquage définitif + réécriture du fichier — c'est ce qui « renvoie » la correction vers le téléphone au prochain passage de la synchronisation), export GPX/GeoJSON/CSV, archive de sauvegarde (zip), changement de dossier surveillé à chaud. Interface en HTML/CSS/JS simple, sans framework ni étape de build.
+- **Kairn Desk** : liste des sessions groupées par semaine, détail d'une session (trace sur fond de carte OpenStreetMap, même style que sur le téléphone — tracé SVG seul si la carte est désactivée ou injoignable —, allure par segment, altitude, zones de vitesse), changement de pas d'analyse, correction (masquage définitif + réécriture du fichier — c'est ce qui « renvoie » la correction vers le téléphone au prochain passage de la synchronisation), export GPX/GeoJSON/CSV, archive de sauvegarde (zip), changement de dossier surveillé à chaud. Interface en HTML/CSS/JS simple, sans framework ni étape de build.
 - **Mobile** : les huit écrans du prototype (onboarding, accueil, préparation, fond de carte OpenStreetMap sous la trace (MapLibre Native, tuiles vectorielles OpenFreeMap sans clé ni compte, cache de 200 Mo sur le téléphone, désactivable), enregistrement en direct qui continue écran verrouillé (service Android au premier plan, notification permanente, permission de position « pendant l'utilisation » seulement — jamais « tout le temps »), avec une position simulée pour développer sans GPS, résumé, analyse, historique en trois vues, export/import, réglages), navigation par état (comme le prototype), stockage GPX réel sur l'appareil, vérification de nouvelle version auprès de l'API publique des releases GitHub.
 
 ### Ce qui est délibérément hors de cette version
 
 Le prototype liste ces pistes comme des décisions à trancher plus tard ; elles sont laissées en évidence dans l'interface (comme Google Drive, déjà marqué « Fermé ») plutôt qu'implémentées à moitié :
 
-- **Relief 3D et préchargement de zone** : le fond de carte est en place sur le mobile (MapLibre, tuiles OpenFreeMap gardées en cache), pas encore dans Kairn Desk ; le relief (modèle d'élévation ouvert) et le téléchargement d'une zone entière avant la sortie restent à faire.
+- **Relief 3D et préchargement de zone** : le fond de carte est en place sur le mobile (MapLibre, tuiles OpenFreeMap gardées en cache) et dans Kairn Desk (MapLibre GL JS, même style) ; le relief (modèle d'élévation ouvert) et le téléchargement d'une zone entière avant la sortie restent à faire.
 - **Google Drive, chiffrement par phrase de passe, capteurs BLE, mode fantôme, segments personnels** : façades présentes, non actives.
 - **Import FIT/TCX** : seul le GPX est lu pour l'instant.
 - **Signature APK** : la vérification de mise à jour compare les versions et pourra vérifier une somme de contrôle ; la vérification de signature Android proprement dite reste à ajouter.
