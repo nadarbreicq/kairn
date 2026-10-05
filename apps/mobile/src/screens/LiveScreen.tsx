@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { totalDistanceMeters } from '@kairn/core';
+import { currentSpeedKmh, totalDistanceMeters } from '@kairn/core';
 import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
 import { Button } from '../components/Button';
@@ -28,7 +28,9 @@ export function LiveScreen() {
     const elapsedSeconds = startedAt ? Math.max(0, (now - startedAt) / 1000) : 0;
     const distanceMeters = totalDistanceMeters(points);
     const paceSecPerKm = distanceMeters > 0 ? elapsedSeconds / (distanceMeters / 1000) : 0;
-    const speedKmh = elapsedSeconds > 0 ? (distanceMeters / elapsedSeconds) * 3.6 : 0;
+    // Vitesse des dernières secondes (et non moyenne depuis le départ) : elle
+    // retombe à 0 à l'arrêt.
+    const speedKmh = currentSpeedKmh(points, now);
     return { elapsedSeconds, distanceMeters, paceSecPerKm, speedKmh };
   }, [points, startedAt, now]);
 

@@ -65,6 +65,52 @@ export function movingDurationSeconds(points: TrackPoint[], stopSpeedKmh = 1): n
   return moving;
 }
 
+/** Fenêtre de lissage des vitesses : assez courte pour garder un sprint, assez longue pour gommer les sauts du GPS. */
+export const SPEED_WINDOW_SECONDS = 10;
+
+/**
+ * Vitesse maximale soutenue : la meilleure vitesse moyenne sur une fenêtre
+ * d'au moins `windowSeconds`. D'un point au suivant (1 s), un mètre d'erreur
+ * GPS vaut déjà 3,6 km/h : le calage du GPS au départ ou une position qui
+ * saute fabriquaient des « pics » impossibles (22 km/h en footing). Une
+ * trace plus courte que la fenêtre renvoie sa vitesse moyenne.
+ */
+export function maxSustainedSpeedKmh(points: TrackPoint[], windowSeconds = SPEED_WINDOW_SECONDS): number {
+  if (points.length < 2) return 0;
+  const cumulative = cumulativeDistances(points);
+  const last = points.length - 1;
+  const totalS = (points[last].t - points[0].t) / 1000;
+  if (totalS <= windowSeconds) return totalS > 0 ? (cumulative[last] / totalS) * 3.6 : 0;
+  let best = 0;
+  let j = 0;
+  for (let i = 0; i < points.length; i++) {
+    if (j < i) j = i;
+    while (j < points.length && (points[j].t - points[i].t) / 1000 < windowSeconds) j++;
+    if (j >= points.length) break;
+    const dtS = (points[j].t - points[i].t) / 1000;
+    best = Math.max(best, ((cumulative[j] - cumulative[i]) / dtS) * 3.6);
+  }
+  return best;
+}
+
+/**
+ * Vitesse actuelle pendant l'enregistrement : distance parcourue sur les
+ * `windowSeconds` précédant `nowMs`. Revient à 0 à l'arrêt, quand le filtre
+ * de bruit n'ajoute plus de point.
+ */
+export function currentSpeedKmh(points: TrackPoint[], nowMs: number, windowSeconds = SPEED_WINDOW_SECONDS): number {
+  const last = points.length - 1;
+  if (last < 1) return 0;
+  const windowStart = nowMs - windowSeconds * 1000;
+  let anchor = last;
+  while (anchor > 0 && points[anchor].t > windowStart) anchor--;
+  const dtS = (nowMs - points[anchor].t) / 1000;
+  if (dtS <= 0) return 0;
+  let meters = 0;
+  for (let i = anchor + 1; i <= last; i++) meters += haversineMeters(points[i - 1], points[i]);
+  return (meters / dtS) * 3.6;
+}
+
 /** Vitesse instantanée en km/h entre chaque paire de points consécutifs (longueur points.length - 1). */
 export function instantSpeedsKmh(points: TrackPoint[]): number[] {
   const out: number[] = [];

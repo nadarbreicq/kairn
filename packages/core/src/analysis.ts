@@ -7,6 +7,7 @@ import {
   cumulativeDistances,
   elevationChange,
   instantSpeedsKmh,
+  maxSustainedSpeedKmh,
   movingDurationSeconds,
   pointAtDistance,
   totalDistanceMeters,
@@ -211,8 +212,7 @@ export function summarize(session: Session): SessionSummary {
   const totalDuration = totalDurationSeconds(points);
   const movingDuration = movingDurationSeconds(points);
   const elev = elevationChange(points);
-  const speeds = instantSpeedsKmh(points);
-  const maxSpeedKmh = speeds.length ? Math.max(...speeds) : 0;
+  const maxSpeedKmh = maxSustainedSpeedKmh(points);
   const avgSpeedKmh = movingDuration > 0 ? (distanceMeters / movingDuration) * 3.6 : 0;
   const avgPaceSecPerKm = distanceMeters > 0 ? movingDuration / (distanceMeters / 1000) : 0;
 

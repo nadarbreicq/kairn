@@ -1,7 +1,10 @@
 import {
   cumulativeDistances,
+  currentSpeedKmh,
   elevationChange,
   haversineMeters,
+  instantSpeedsKmh,
+  maxSustainedSpeedKmh,
   maskStartEnd,
   movingDurationSeconds,
   pointAtDistance,
@@ -137,5 +140,48 @@ describe('maskStartEnd', () => {
   it('ne modifie rien pour un rayon nul', () => {
     const track = generateConstantPaceTrack({ distanceMeters: 500, speedKmh: 10 });
     expect(maskStartEnd(track.points, 0)).toHaveLength(track.points.length);
+  });
+});
+
+describe('maxSustainedSpeedKmh / currentSpeedKmh', () => {
+  const METERS_PER_DEG_LAT = (6371000 * Math.PI) / 180;
+
+  it("n'invente pas de pic quand une seule position saute (non-régression : 22 km/h en footing)", () => {
+    const run = generateConstantPaceTrack({ distanceMeters: 1000, speedKmh: 9 });
+    const points = run.points.map((p) => ({ ...p }));
+    // Calage du GPS : une position décalée de 6 m pendant une seconde.
+    points[3] = { ...points[3], lat: points[3].lat + 6 / METERS_PER_DEG_LAT };
+    expect(Math.max(...instantSpeedsKmh(points))).toBeGreaterThan(20);
+    // Le saut reste visible, mais dilué sur la fenêtre : erreur ≈ saut / durée de fenêtre.
+    expect(maxSustainedSpeedKmh(points)).toBeLessThan(12.5);
+  });
+
+  it('retrouve la vitesse réelle sur une allure constante', () => {
+    const ride = generateConstantPaceTrack({ distanceMeters: 3000, speedKmh: 27 });
+    expect(maxSustainedSpeedKmh(ride.points)).toBeCloseTo(27, 0);
+  });
+
+  it('garde un vrai sprint de quelques dizaines de secondes', () => {
+    const easy = generateConstantPaceTrack({ distanceMeters: 500, speedKmh: 10 }).points;
+    const t1 = easy[easy.length - 1].t;
+    const sprint = generateConstantPaceTrack({ distanceMeters: 150, speedKmh: 20, startTime: t1 }).points.map((p) => ({
+      ...p,
+      lon: p.lon + (easy[easy.length - 1].lon - easy[0].lon),
+    }));
+    expect(maxSustainedSpeedKmh([...easy, ...sprint.slice(1)])).toBeGreaterThan(19);
+  });
+
+  it('donne la moyenne pour une trace plus courte que la fenêtre, 0 sans mouvement possible', () => {
+    const short = generateConstantPaceTrack({ distanceMeters: 20, speedKmh: 12 }).points;
+    expect(maxSustainedSpeedKmh(short)).toBeCloseTo(12, 0);
+    expect(maxSustainedSpeedKmh(short.slice(0, 1))).toBe(0);
+  });
+
+  it("donne la vitesse des dernières secondes, et revient à 0 quand on s'arrête", () => {
+    const run = generateConstantPaceTrack({ distanceMeters: 500, speedKmh: 12 }).points;
+    const lastT = run[run.length - 1].t;
+    expect(currentSpeedKmh(run, lastT)).toBeCloseTo(12, 0);
+    expect(currentSpeedKmh(run, lastT + 30_000)).toBe(0); // arrêté depuis 30 s : plus aucun point
+    expect(currentSpeedKmh(run.slice(0, 1), lastT)).toBe(0);
   });
 });
