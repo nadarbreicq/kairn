@@ -6,6 +6,7 @@ import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
 import { Button } from '../components/Button';
 import { formatChrono } from '../format';
+import { effortLabel, formatEffort, metricFor } from '../metrics';
 import { TraceMap } from '../components/TraceMap';
 
 type LiveView = 'numbers' | 'map';
@@ -27,16 +28,17 @@ export function LiveScreen() {
     // l'arrêt, le filtre de bruit n'ajoute plus de point mais le temps passe.
     const elapsedSeconds = startedAt ? Math.max(0, (now - startedAt) / 1000) : 0;
     const distanceMeters = totalDistanceMeters(points);
-    const paceSecPerKm = distanceMeters > 0 ? elapsedSeconds / (distanceMeters / 1000) : 0;
+    const avgSpeedKmh = elapsedSeconds > 0 ? (distanceMeters / elapsedSeconds) * 3.6 : 0;
     // Vitesse des dernières secondes (et non moyenne depuis le départ) : elle
     // retombe à 0 à l'arrêt.
     const speedKmh = currentSpeedKmh(points, now);
-    return { elapsedSeconds, distanceMeters, paceSecPerKm, speedKmh };
+    return { elapsedSeconds, distanceMeters, avgSpeedKmh, speedKmh };
   }, [points, startedAt, now]);
 
-  const pace = Number.isFinite(metrics.paceSecPerKm) && metrics.paceSecPerKm > 0
-    ? `${Math.floor(metrics.paceSecPerKm / 60)}'${String(Math.round(metrics.paceSecPerKm % 60)).padStart(2, '0')}"`
-    : '—';
+  // Allure ou vitesse, selon le sport et le réglage (voir metrics.ts).
+  const metric = metricFor(state.recordSport, settings.runningMetric);
+  const average = formatEffort(metric, metrics.avgSpeedKmh);
+  const current = formatEffort(metric, metrics.speedKmh);
 
   return (
     <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, spacing[4]) }]}>
@@ -81,15 +83,15 @@ export function LiveScreen() {
           </View>
           <View style={[styles.splitRow, styles.bordered]}>
             <View style={styles.splitCol}>
-              <Text style={styles.smallKicker}>Allure moy.</Text>
-              <Text style={styles.midNumber}>{pace}</Text>
-              <Text style={styles.unit}>min/km</Text>
+              <Text style={styles.smallKicker}>{effortLabel(metric)} moy.</Text>
+              <Text style={styles.midNumber}>{average.value}</Text>
+              <Text style={styles.unit}>{average.unit}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.splitCol}>
-              <Text style={styles.smallKicker}>Instantanée</Text>
-              <Text style={styles.midNumber}>{metrics.speedKmh.toFixed(1).replace('.', ',')}</Text>
-              <Text style={styles.unit}>km/h</Text>
+              <Text style={styles.smallKicker}>{effortLabel(metric)} actuelle</Text>
+              <Text style={styles.midNumber}>{current.value}</Text>
+              <Text style={styles.unit}>{current.unit}</Text>
             </View>
           </View>
         </View>
@@ -101,7 +103,7 @@ export function LiveScreen() {
           <View style={styles.mapStatsRow}>
             <MiniStat label="durée" value={formatChrono(metrics.elapsedSeconds)} />
             <MiniStat label="km" value={(metrics.distanceMeters / 1000).toFixed(2).replace('.', ',')} />
-            <MiniStat label="min/km" value={pace} />
+            <MiniStat label={current.unit} value={current.value} />
           </View>
         </View>
       )}

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { formatDuration, formatPace, summarize } from '@kairn/core';
+import { formatDuration, summarize } from '@kairn/core';
 import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
 import { Button } from '../components/Button';
 import { Card } from '../components/Basics';
 import { formatDateShort, formatClock, formatKm, SESSION_NAME_MAX } from '../format';
 import { TraceMap } from '../components/TraceMap';
+import { effortLabel, formatEffort, metricFor } from '../metrics';
 
 export function SummaryScreen() {
   const { state, settings, goAnalyse, go, renameSession, deleteSession } = useApp();
@@ -22,11 +23,13 @@ export function SummaryScreen() {
   }
 
   const summary = summarize(session);
+  const metric = metricFor(session.sport, settings.runningMetric);
+  const average = formatEffort(metric, summary.avgSpeedKmh);
   const start = session.points[0];
   const stats = [
     { k: 'Distance', v: formatKm(summary.distanceMeters), u: 'km' },
     { k: 'Durée', v: formatDuration(summary.movingDurationSeconds), u: 'en mouvement' },
-    { k: 'Allure moy.', v: `${formatPace(summary.avgPaceSecPerKm)}`, u: 'min/km' },
+    { k: `${effortLabel(metric)} moy.`, v: average.value, u: average.unit },
     { k: 'Vit. max', v: summary.maxSpeedKmh.toFixed(1).replace('.', ','), u: 'km/h' },
     { k: 'D+', v: String(Math.round(summary.elevGainMeters)), u: 'm' },
     { k: 'Points GPS', v: String(summary.pointCount), u: summary.samplingHz > 0 ? `${summary.samplingHz.toFixed(summary.samplingHz < 1 ? 1 : 0).replace('.', ',')} Hz` : '—' },

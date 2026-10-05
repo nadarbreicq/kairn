@@ -4,6 +4,7 @@
  * (`settings.expo.ts`) passe par AsyncStorage.
  */
 import type { SyncFolderRef } from './syncFolder';
+import type { EffortMetric } from '../metrics';
 
 export type StorageDestinationId = 'local' | 'folder';
 
@@ -18,6 +19,8 @@ export interface Settings {
   map: { enabled: boolean };
   /** Conseil batterie de l'écran de préparation masqué par l'utilisateur. */
   batteryTipDismissed: boolean;
+  /** Repère affiché pour la course, le trail et la marche (le vélo et la rando restent en vitesse). */
+  runningMetric: EffortMetric;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -28,6 +31,7 @@ export const DEFAULT_SETTINGS: Settings = {
   updates: { checkOnLaunch: true, includePrereleases: false },
   map: { enabled: true },
   batteryTipDismissed: false,
+  runningMetric: 'allure',
 };
 
 /**
@@ -49,6 +53,7 @@ export function normalizeSettings(stored: Partial<Settings> & Record<string, unk
     },
     map: { enabled: merged.map?.enabled ?? DEFAULT_SETTINGS.map.enabled },
     batteryTipDismissed: merged.batteryTipDismissed ?? false,
+    runningMetric: merged.runningMetric === 'vitesse' ? 'vitesse' : 'allure',
   };
 }
 

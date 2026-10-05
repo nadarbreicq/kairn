@@ -21,6 +21,7 @@ import { SectionTitle, SegmentedRow } from '../components/Basics';
 import { Icon, ICON_PATHS } from '../components/Icons';
 import { formatKm, sportOptions } from '../format';
 import type { HistoryMode, VolumeRangeLabel } from '../store/types';
+import { metricFor } from '../metrics';
 
 const MODES: { id: HistoryMode; label: string }[] = [
   { id: 'weeks', label: 'Semaines' },
@@ -163,9 +164,13 @@ function TrendView() {
 }
 
 function ProgView() {
-  const { state, setProgSport } = useApp();
+  const { state, settings, setProgSport } = useApp();
   const sport = state.progSport;
   const family = sportFamily(sport);
+  // La progression est calculée dans l'unité du sport (allure ou vitesse) ;
+  // si l'utilisateur préfère la vitesse, l'allure est convertie à l'affichage.
+  const metric = metricFor(sport, settings.runningMetric);
+  const toDisplay = (v: number) => (family === 'allure' && metric === 'vitesse' ? (v > 0 ? 3600 / v : NaN) : v);
 
   const filtered = useMemo(() => state.sessions.filter((s) => s.sport === sport), [state.sessions, sport]);
   const prog = useMemo(() => progression(state.sessions, sport), [state.sessions, sport]);
@@ -177,25 +182,28 @@ function ProgView() {
   const best10k = bestEffortAcrossSessions(filtered, 10000);
   const maxSpeed = filtered.reduce((max, s) => Math.max(max, summarize(s).maxSpeedKmh), 0);
 
-  const values = prog.months.map((m) => m.value).filter((v) => Number.isFinite(v));
+  const values = prog.months.map((m) => toDisplay(m.value)).filter((v) => Number.isFinite(v));
   const chart = useMemo(() => {
     if (values.length === 0) return { line: '', points: [] as { x: number; y: number }[] };
-    const better = family === 'allure'; // plus petit = mieux -> en haut du graphe
+    const better = metric === 'allure'; // allure : plus petit = mieux -> en haut du graphe
     const min = Math.min(...values);
     const max = Math.max(...values);
     const span = Math.max(0.001, max - min);
     const pts = prog.months.map((m, i) => {
-      const t = Number.isFinite(m.value) ? (m.value - min) / span : 0.5;
+      const v = toDisplay(m.value);
+      const t = Number.isFinite(v) ? (v - min) / span : 0.5;
       const y = better ? 12 + t * 68 : 80 - t * 68;
       const x = (i * 300) / Math.max(1, prog.months.length - 1);
-      return { x, y: Number.isFinite(m.value) ? y : null };
+      return { x, y: Number.isFinite(v) ? y : null };
     });
     const line = pts
       .filter((p): p is { x: number; y: number } => p.y !== null)
       .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
       .join(' ');
     return { line, points: pts.filter((p): p is { x: number; y: number } => p.y !== null) };
-  }, [values, prog.months, family]);
+    // toDisplay ne dépend que de family et metric, déjà listés.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values, prog.months, family, metric]);
 
   return (
     <View>
@@ -204,9 +212,9 @@ function ProgView() {
       </View>
 
       <View style={[styles.card, { marginBottom: spacing[4] }]}>
-        <Text style={styles.kicker}>Moyenne sur 6 mois · {prog.unit}</Text>
+        <Text style={styles.kicker}>Moyenne sur 6 mois · {metric === 'allure' ? 'min/km' : 'km/h'}</Text>
         <Text style={styles.bigNumber}>
-          {values.length === 0 ? '—' : family === 'allure' ? formatPace(values[values.length - 1]) : values[values.length - 1].toFixed(1)}
+          {values.length === 0 ? '—' : metric === 'allure' ? formatPace(values[values.length - 1]) : values[values.length - 1].toFixed(1).replace('.', ',')}
         </Text>
         <Svg width="100%" height={96} viewBox="0 0 300 96" style={{ marginTop: spacing[2] }}>
           <Path d={chart.line} stroke={colors.accent} strokeWidth={2} fill="none" />

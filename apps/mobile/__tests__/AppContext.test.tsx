@@ -81,6 +81,8 @@ function Harness() {
       <Pressable testID="discardRecovery" onPress={app.discardRecovery} />
       <Pressable testID="resumeRecovery" onPress={app.resumeRecovery} />
       <Pressable testID="disableMap" onPress={() => app.setMapEnabled(false)} />
+      <Text testID="runningMetric">{app.settings.runningMetric}</Text>
+      <Pressable testID="preferSpeed" onPress={() => app.setRunningMetric('vitesse')} />
       <Text testID="batteryTipDismissed">{String(app.settings.batteryTipDismissed)}</Text>
       <Pressable testID="dismissBatteryTip" onPress={app.dismissBatteryTip} />
       <Pressable testID="next" onPress={app.completeOnboardingStep} />
@@ -632,5 +634,18 @@ describe('AppProvider — conseil batterie', () => {
     await act(async () => fireEvent.press(getByTestId('dismissBatteryTip')));
     expect(getByTestId('batteryTipDismissed').props.children).toBe('true');
     expect((await settingsStore.load()).batteryTipDismissed).toBe(true);
+  });
+});
+
+describe('AppProvider — allure ou vitesse', () => {
+  it("affiche l'allure par défaut pour la course, et retient le choix de la vitesse", async () => {
+    const settingsStore = new InMemorySettingsStore({ onboardingDone: true });
+    const { getByTestId } = renderHarness(makeServices({ settingsStore }));
+    await waitReady(getByTestId);
+    expect(getByTestId('runningMetric').props.children).toBe('allure');
+
+    await act(async () => fireEvent.press(getByTestId('preferSpeed')));
+    expect(getByTestId('runningMetric').props.children).toBe('vitesse');
+    expect((await settingsStore.load()).runningMetric).toBe('vitesse');
   });
 });

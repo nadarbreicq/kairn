@@ -3,7 +3,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
 import { Button } from '../components/Button';
-import { Card, SectionTitle, ToggleRow } from '../components/Basics';
+import { Card, SectionTitle, SegmentedRow, ToggleRow } from '../components/Basics';
 import { LockIcon } from '../components/Icons';
 import { APP_VERSION } from '../version';
 import { STORAGE_OPTIONS } from '../storageOptions';
@@ -26,7 +26,7 @@ function updateButtonTitle(phase: string, hasApk: boolean): string {
 }
 
 export function PrivacyScreen() {
-  const { state, settings, pickStorage, changeSyncFolder, syncAllSessions, setMask, setUpdateOption, setMapEnabled, checkForUpdate, installUpdate, services } = useApp();
+  const { state, settings, pickStorage, changeSyncFolder, syncAllSessions, setMask, setUpdateOption, setMapEnabled, setRunningMetric, checkForUpdate, installUpdate, services } = useApp();
   const folderActive = settings.storageDestination === 'folder' && settings.syncFolder;
 
   return (
@@ -98,6 +98,20 @@ export function PrivacyScreen() {
           onChange={(v) => setMask('maskStartEnd', v)}
         />
       </View>
+
+      <SectionTitle>Affichage</SectionTitle>
+      <Card style={{ marginBottom: spacing[6], gap: spacing[2] }}>
+        <Text style={{ color: colors.text, fontSize: 13 }}>Course, trail et marche</Text>
+        <SegmentedRow
+          options={[
+            { id: 'allure', label: 'Allure (min/km)' },
+            { id: 'vitesse', label: 'Vitesse (km/h)' },
+          ]}
+          value={settings.runningMetric}
+          onChange={setRunningMetric}
+        />
+        <Text style={{ color: colors.textDim45, fontSize: 11.5 }}>Le vélo et la randonnée s'affichent toujours en km/h.</Text>
+      </Card>
 
       <SectionTitle>Fond de carte</SectionTitle>
       <View style={{ gap: spacing[2], marginBottom: spacing[6] }}>

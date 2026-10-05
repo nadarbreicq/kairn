@@ -4,7 +4,6 @@ import Svg, { Path } from 'react-native-svg';
 import {
   GRANULARITIES,
   chooseGranularity,
-  formatPace,
   speedZones,
   splitSegments,
   totalDistanceMeters,
@@ -14,6 +13,7 @@ import { colors, fonts, spacing } from '../theme';
 import { useApp } from '../store/AppContext';
 import { SectionTitle, SegmentedRow } from '../components/Basics';
 import { formatKm } from '../format';
+import { effortLabel, formatEffort, metricFor } from '../metrics';
 import { buildAreaPath } from '../geoProjection';
 
 const GRAN_OPTIONS: { id: GranularityId | 'auto'; label: string }[] = [
@@ -22,7 +22,7 @@ const GRAN_OPTIONS: { id: GranularityId | 'auto'; label: string }[] = [
 ];
 
 export function AnalyseScreen() {
-  const { state, setGranularity } = useApp();
+  const { state, settings, setGranularity } = useApp();
   const session = state.sessions.find((s) => s.id === state.selectedSessionId);
 
   const distanceMeters = session ? totalDistanceMeters(session.points) : 0;
@@ -37,6 +37,8 @@ export function AnalyseScreen() {
     const elevations = (session?.points ?? []).map((p) => p.ele).filter((e): e is number => e !== undefined);
     return buildAreaPath(elevations, 320, 86, 4);
   }, [session]);
+
+  const metric = metricFor(session?.sport ?? 'course', settings.runningMetric);
 
   if (!session) {
     return (
@@ -57,7 +59,7 @@ export function AnalyseScreen() {
       </View>
       <Text style={styles.note}>{granularity.auto ? 'Pas choisi automatiquement pour cette distance. ' : 'Pas forcé manuellement. '}{granularity.note}</Text>
 
-      <SectionTitle>Allure par segment</SectionTitle>
+      <SectionTitle>{effortLabel(metric)} par segment</SectionTitle>
       <View style={[styles.card, { marginBottom: spacing[4] }]}>
         {segments.length === 0 ? (
           <Text style={{ color: colors.textDim45, fontSize: 12 }}>Trace trop courte pour être découpée.</Text>
@@ -77,7 +79,7 @@ export function AnalyseScreen() {
                     ]}
                   />
                 </View>
-                <Text style={styles.splitPace}>{formatPace(seg.paceSecPerKm)}</Text>
+                <Text style={styles.splitPace}>{formatEffort(metric, seg.speedKmh).value}</Text>
                 <Text style={styles.splitElev}>{seg.elevGainMeters > seg.elevLossMeters ? '+' : '−'}{Math.round(Math.max(seg.elevGainMeters, seg.elevLossMeters))}</Text>
               </View>
             ))}

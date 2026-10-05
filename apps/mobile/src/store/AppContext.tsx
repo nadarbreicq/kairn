@@ -98,6 +98,7 @@ interface AppContextValue {
   setUpdateOption: (key: keyof Settings['updates'], value: boolean) => void;
   setMapEnabled: (enabled: boolean) => void;
   dismissBatteryTip: () => void;
+  setRunningMetric: (metric: Settings['runningMetric']) => void;
   checkForUpdate: () => Promise<void>;
   /** Télécharge la version trouvée puis ouvre l'installateur d'Android. */
   installUpdate: () => Promise<void>;
@@ -503,6 +504,13 @@ export function AppProvider({ services, children }: { services: AppServices; chi
     [services]
   );
 
+  const setRunningMetric = useCallback(
+    (runningMetric: Settings['runningMetric']) => {
+      services.settingsStore.save({ runningMetric }).then(setSettings);
+    },
+    [services]
+  );
+
   const dismissBatteryTip = useCallback(() => {
     services.settingsStore.save({ batteryTipDismissed: true }).then(setSettings);
   }, [services]);
@@ -602,6 +610,7 @@ export function AppProvider({ services, children }: { services: AppServices; chi
       setUpdateOption,
       setMapEnabled,
       dismissBatteryTip,
+      setRunningMetric,
       checkForUpdate,
       installUpdate,
       refreshSessions,
@@ -639,6 +648,7 @@ export function AppProvider({ services, children }: { services: AppServices; chi
       setUpdateOption,
       setMapEnabled,
       dismissBatteryTip,
+      setRunningMetric,
       checkForUpdate,
       installUpdate,
       refreshSessions,
